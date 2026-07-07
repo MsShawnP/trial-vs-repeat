@@ -28,3 +28,11 @@ Thumbs.db
 
 # Project URL marker
 .claude-project-url
+
+# Vendored package build artifacts
+packages/**/build/
+packages/**/*.egg-info/
+
+# Local build artifacts from pip install .
+/build/
+/*.egg-info/

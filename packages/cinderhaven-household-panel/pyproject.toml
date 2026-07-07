@@ -1,0 +1,21 @@
+[project]
+name = "cinderhaven-household-panel"
+version = "0.1.0"
+description = "Shared, seed-locked synthetic household panel for the Cinderhaven penetration tools (#3 Decompose, #4 Leaky Bucket)"
+requires-python = ">=3.11"
+# cinderhaven-store-universe is a peer package (doormath/packages). It is the SSOT
+# for the canonical universe (SKUs, product lines, retailers, regions) and must be
+# installed editable in the environment first:
+#   pip install -e ../../..//doormath-sales-penetration/packages/cinderhaven-store-universe
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "cinderhaven-store-universe>=0.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
