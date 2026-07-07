@@ -5,21 +5,18 @@ session. For session-by-session state, see HANDOFF.md.
 
 ---
 
-## ✅ UN-PARKED — #3 Decompose shipped, panel ready (2026-07-06)
+## ✅ SHIPPED — Leaky Bucket is LIVE (2026-07-06)
 
-The blocker is cleared. #3 Decompose is fully shipped (built, code-review
-passed, custom domain set up). Its shared `cinderhaven_household_panel`
-(`decompose-sales-penetration/packages/cinderhaven-household-panel/`) was
-built with #4 in mind and has everything #4 needs, verified:
-- Burn-in: 4 quarters (2023) + 8 analysis quarters (2024-2025).
-- Two launch seeds via `hp.LAUNCH_ITEMS`: `CHP-SB-010` (leaky, 10-20%
-  repeat, 800+ triers) + `CHP-PS-010` (sticky, 45%+ repeat). Computed, not
-  hardcoded; gated by `test_seeded_stories.py`.
-- Seed-lock: deterministic `_rng.py` + `test_canonical.py`.
-- API #4 consumes: `get_households`, `get_transactions`,
-  `get_period_metrics`, `get_buyer_flow`, `LAUNCH_ITEMS`, calendar labels.
+The build arc below is **complete**. Leaky Bucket is deployed, reviewed, and
+live at **https://leakybucket.lailarallc.com** (Fly, HTTPS). 47 app + 49 panel
+tests green, ruff clean, 5-agent review resolved. **All five Cinderhaven
+penetration tools are now live** — the series is done.
 
-**The build arc below is now clear to start at Slice 0.**
+**Only non-code follow-ups remain (Shawn's):** copy pass on `docs/launch/`
+(blog + work-card); `/publish` to flip the repo public; place the work-card on
+lailarallc.com/work; optional `/ce:compound`. No open engineering work.
+
+See "Arc history" below for the completed build arc.
 
 ---
 
@@ -121,6 +118,16 @@ verified; Work card + blog draft done; review findings resolved; tests green.
 
 When an arc completes, archive its goal, completion date, and outcome
 here. Then start a new arc above.
+
+### 2026-07-06 — Build & ship Leaky Bucket (trial vs repeat analyzer)
+- Outcome: Built the full app on the Decompose template (in-process shared panel,
+  no DB) — trial/repeat math with maturity cutoff, cohort triangle, leaky-bucket
+  flow, promotion-or-brand verdict. Deployed live to leakybucket.lailarallc.com.
+  5-agent code review resolved (2 real bugs: empty-slice false "Promotion",
+  cohort empty-frame crash). 96 tests green, ruff clean. Final tool in the
+  5-part penetration series — all five now live.
+- Tag: v0.1-foundation (scaffold). Consider a v1.0 ship tag.
+- Remaining (non-code, Shawn): copy pass on docs/launch/, /publish, work-card placement.
 
 ---
 

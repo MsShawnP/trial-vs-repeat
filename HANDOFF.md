@@ -47,6 +47,24 @@ or run `/office-hours` first to stress-test the concept.
 
 ---
 
+## 2026-07-06 — Session wrap: Leaky Bucket built, reviewed, LIVE
+
+**Started from:** Empty folder + brainstorm. Scaffold → /clarify → build.
+
+**Did:** Scaffolded the project; /clarify parked it (blocked on #3), then un-parked when
+#3 shipped; built Slices 0–4 (foundation, trial/repeat math, charts+3 views, exec shell,
+deploy); deployed live to leakybucket.lailarallc.com; ran a 5-agent review and resolved
+every finding (+25 tests); wrote work-card + blog drafts.
+
+**State:** LIVE at https://leakybucket.lailarallc.com serving the reviewed build. 47 app +
+49 panel = 96 tests green, ruff clean. Private repo, all on main. No code outstanding.
+**All five Cinderhaven penetration tools are now live.**
+
+**Next:** Copy pass on docs/launch/ (blog + work-card); `/publish` to flip repo public;
+place work-card on lailarallc.com/work; optional `/ce:compound`.
+
+---
+
 ## 2026-07-06 — Slice 4b: 5-agent code review, all findings resolved
 
 **Ran the multi-agent review** (correctness, kieran-python, maintainability, testing,
