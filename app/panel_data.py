@@ -80,6 +80,24 @@ def retailer_options() -> list[dict[str, str]]:
     return options
 
 
+SCOPE_BRAND = "__brand__"
+
+
+def scope_options() -> list[dict[str, str]]:
+    """Analysis-scope options: the whole brand, or one of the two launch items."""
+    options = [{"label": "Whole brand", "value": SCOPE_BRAND}]
+    for sku, cfg in panel.LAUNCH_ITEMS.items():
+        line_code = sku.split("-")[1]
+        line_name = panel.PRODUCT_LINES[line_code]["name"]
+        options.append({"label": f"{line_name} launch ({cfg['role']})", "value": sku})
+    return options
+
+
+def scope_sku(scope: str | None) -> str | None:
+    """Map a scope value to a sku filter (None = whole brand)."""
+    return None if scope in (None, SCOPE_BRAND, "") else scope
+
+
 def _normalize(value: str | None) -> str | None:
     """Map the sentinel '__all__' (and empty) to None for the panel accessors."""
     return None if value in (None, "__all__", "") else value
@@ -91,14 +109,14 @@ def get_metrics(product_line: str | None = None, retailer_id: str | None = None)
     return panel.get_period_metrics(_normalize(product_line), _normalize(retailer_id))
 
 
-def get_flow(product_line: str | None = None, retailer_id: str | None = None) -> pd.DataFrame:
-    """New/retained/lapsed buyer flow for a filter combination — the leaky-bucket flow.
+def get_flow(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+    """New/retained/lapsed/net buyer flow for a filter combination — the leaky bucket.
 
-    Thin pass-through to the panel's ``get_buyer_flow``: each adjacent quarter pair's
-    prior/current buyers, with retained/new/lapsed. Identities hold every row
-    (prior = retained + lapsed; current = retained + new).
+    Scope-aware: whole brand (sku=None) or one launch item. Each adjacent quarter
+    pair's prior/current buyers, with retained/new/lapsed/net. Identities hold every
+    row (prior = retained + lapsed; current = retained + new).
     """
-    return panel.get_buyer_flow(_normalize(product_line), _normalize(retailer_id))
+    return trial_repeat.buyer_flow(_normalize(product_line), _normalize(retailer_id), sku)
 
 
 def launch_items() -> pd.DataFrame:

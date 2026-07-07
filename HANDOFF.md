@@ -47,6 +47,42 @@ or run `/office-hours` first to stress-test the concept.
 
 ---
 
+## 2026-07-06 — Slices 2 & 3 built (charts, views, exec shell) — app runs
+
+**Did:**
+- **charts.py** — reused Decompose's Economist template; added `pct_yaxis` /
+  `count_yaxis` helpers (round, non-duplicate ticks).
+- **components.py** — view heading, stat cards (metric-card DOM), why-this-matters,
+  and a trial/repeat glossary.
+- **filters.py** — Leaky Bucket's filter bar: Scope (whole brand / launch item),
+  Repeat window (8/12/26/52w), Product line, Retailer; shared filter-state contract.
+- **Three views:** `verdict.py` (default tab — headline + two-launch stat cards +
+  trial-reach-vs-repeat scatter with brand line), `cohort.py` (retention triangle
+  heatmap + depth-of-repeat bars), `flow.py` (leaky-bucket in/out/net + cumulative
+  trial curve).
+- **layout.py** — frame, 3 tabs, filter bar, pre-rendered panels, tab-visibility
+  callback. Loading overlay watches `#verdict-chart`.
+- Vendored self-hosted fonts; dev server `threaded=True`.
+
+**Verified in-browser** (dev server): default tab renders with correct numbers
+(leaky CHP-SB-010 → 14.3% Promotion / 24.7% reach; sticky CHP-PS-010 → 51.4% Brand /
+8.6% reach at 52w). All 5 charts paint (verdict scatter, cohort heatmap, depth, flow,
+trial curve). No JS errors. Deployed-UI gate: 1200px centered container, no horizontal
+overflow at 1440px or 375px, filter bar wraps on mobile, charts fit on fresh mobile load.
+
+**Tests:** +3 layout/tab-regression tests → **22 app tests + 49 vendored panel = 71 green.**
+
+**Note:** the preview *screenshot* tool times out on this Plotly-heavy page (tool quirk,
+not the app — verified via accessibility snapshot + preview_inspect/eval instead).
+
+**State:** App builds, runs, and renders correctly end to end. Not yet: `/ce:compound`
++ code review, deploy, work card, blog (Slice 4).
+
+**Next:** Slice 4 — review, deploy to leakybucket.lailarallc.com (confirm subdomain),
+work-page card, blog draft.
+
+---
+
 ## 2026-07-06 — Slices 0 & 1 built (foundation + metric core)
 
 **Did:**

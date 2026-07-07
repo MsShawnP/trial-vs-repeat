@@ -201,6 +201,44 @@ def depth_of_repeat(window_weeks: int, product_line=None, retailer_id=None, sku=
     return {"counts": buckets, "shares": shares, "n_mature": n}
 
 
+# ── Buyer flow (leaky bucket), scope-aware ────────────────────────────
+def buyer_flow(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+    """New / retained / lapsed buyer flow per adjacent quarter pair, for any scope.
+
+    For the whole brand (sku=None) this mirrors the panel's ``get_buyer_flow``; with a
+    sku it computes the same flow for that one item. Columns: from_index, from_label,
+    to_label, prior_buyers, current_buyers, retained, new, lapsed, net (= new − lapsed).
+    Identities hold every row (prior = retained + lapsed; current = retained + new).
+    """
+    from cinderhaven_household_panel import get_quarters
+
+    tx = _tx(product_line, retailer_id, sku)
+    quarters = get_quarters()[["quarter_index", "label"]].sort_values("quarter_index")
+    buyers_by_q = {qi: set(g["household_id"].unique()) for qi, g in tx.groupby("quarter_index")}
+    labels = dict(zip(quarters["quarter_index"], quarters["label"]))
+    indices = quarters["quarter_index"].tolist()
+
+    rows = []
+    for prev, curr in zip(indices[:-1], indices[1:]):
+        prior = buyers_by_q.get(prev, set())
+        current = buyers_by_q.get(curr, set())
+        retained = len(prior & current)
+        new = len(current - prior)
+        lapsed = len(prior - current)
+        rows.append({
+            "from_index": prev,
+            "from_label": labels[prev],
+            "to_label": labels[curr],
+            "prior_buyers": len(prior),
+            "current_buyers": len(current),
+            "retained": retained,
+            "new": new,
+            "lapsed": lapsed,
+            "net": new - lapsed,
+        })
+    return pd.DataFrame(rows)
+
+
 # ── Per-item verdict: promotion or brand? ─────────────────────────────
 def item_verdict(window_weeks: int, threshold: float, product_line=None, retailer_id=None) -> pd.DataFrame:
     """Trial reach vs mature repeat rate per launch item, with a promotion/brand verdict.
