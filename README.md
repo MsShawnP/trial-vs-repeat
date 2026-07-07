@@ -15,7 +15,7 @@ Tool #4 of 5 in the Cinderhaven household-penetration series (Door Math ·
 Spin Rate · Void Finder · Decompose · **Leaky Bucket**). The integrity
 check on Decompose: #3 says how many buyers, #4 says whether they stuck.
 
-**Live:** _not yet deployed_ (intended: https://leakybucket.lailarallc.com)
+**Live:** https://leakybucket.lailarallc.com
 
 ## Run it
 

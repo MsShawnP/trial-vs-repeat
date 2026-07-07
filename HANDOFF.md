@@ -47,6 +47,24 @@ or run `/office-hours` first to stress-test the concept.
 
 ---
 
+## 2026-07-06 — Slice 4a: DEPLOYED and LIVE
+
+**Deployed and LIVE at https://leakybucket.lailarallc.com** (HTTPS, Let's Encrypt cert
+Issued/verified). Also `trial-vs-repeat.fly.dev` (1 machine, iad, shared-cpu-1x,
+1024mb, image 106 MB). `/health` → `200 {"status":"ok"}`; production `_dash-layout`
+has all chart targets + synthetic disclosure. Deploy-first was Shawn's call.
+
+**Custom domain via Cloudflare API** (token at `~/.config/lailara/cloudflare-dns-token`,
+zone 53d54c95…, see [[cloudflare-dns-token]]). Created two DNS-only CNAMEs:
+`leakybucket → 12kxz62.trial-vs-repeat.fly.dev` and
+`_acme-challenge.leakybucket → leakybucket.lailarallc.com.12kxz62.flydns.net`. Cert
+validated in ~15s.
+
+**Remaining Slice 4:** multi-agent code review (Shawn: review AFTER deploy) + drive
+findings to resolution; work-page card + blog draft (docs/launch/); `/publish` when ready.
+
+---
+
 ## 2026-07-06 — Slices 2 & 3 built (charts, views, exec shell) — app runs
 
 **Did:**
