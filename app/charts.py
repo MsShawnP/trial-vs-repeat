@@ -104,23 +104,13 @@ def pct_yaxis(max_value: float, title: str = "Rate", **overrides) -> dict:
     return axis
 
 
-def count_yaxis(max_value: float, title: str = "Households", **overrides) -> dict:
-    """A y-axis for whole counts: round, evenly-spaced, non-duplicate integer ticks."""
-    dtick = _nice_dtick(max_value, divisions=6)
-    axis = dict(
-        title=dict(text=title, font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
-        showgrid=True,
-        gridcolor=GRIDLINE,
-        gridwidth=1,
-        showline=False,
-        automargin=True,
-        tickformat=",.0f",
-        dtick=dtick,
-        range=[0, max_value * 1.15 if max_value > 0 else 1],
-        tickfont=dict(family=FONT_SANS, size=12, color=TEXT_SECONDARY),
-    )
-    axis.update(overrides)
-    return axis
+def nice_dtick(max_value: float, divisions: int = 6) -> float:
+    """Public round-tick step for count/quantity axes that build their own dict.
+
+    The flow chart's y-axis is signed (lapsed below zero), so it can't use a
+    0-based axis helper; it uses this to guarantee evenly-spaced, non-duplicate ticks.
+    """
+    return _nice_dtick(max_value, divisions)
 
 
 CHART_CONFIG = {

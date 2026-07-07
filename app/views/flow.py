@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, dcc, html
 
 from app import panel_data
-from app.charts import CHART_CONFIG, economist_layout
+from app.charts import CHART_CONFIG, economist_layout, nice_dtick
 from app.components import view_heading, why_this_matters
 from app.constants import (
     FLOW_LAPSED,
@@ -19,11 +19,11 @@ from app.constants import (
     FLOW_RETAINED,
     FONT_SANS,
     FONT_SERIF,
+    GRIDLINE,
     INK,
     REFERENCE,
     TEXT_SECONDARY,
     TRIAL_COLOR,
-    fmt_number,
 )
 
 _WHY = (
@@ -71,20 +71,20 @@ def _build_flow(flow):
     fig = go.Figure()
     fig.add_bar(
         x=x, y=retained, name="Retained", marker_color=FLOW_RETAINED,
-        text=retained, texttemplate="%{text:,}", textposition="inside",
+        text=retained, texttemplate="<b>%{text:,}</b>", textposition="inside",
         insidetextfont=label_font,
         hovertemplate="%{x}<br>Retained %{y:,}<extra></extra>",
     )
     fig.add_bar(
         x=x, y=new, name="New (in)", marker_color=FLOW_NEW,
-        text=new, texttemplate="%{text:,}", textposition="inside",
+        text=new, texttemplate="<b>%{text:,}</b>", textposition="inside",
         insidetextfont=label_font,
         hovertemplate="%{x}<br>New %{y:,}<extra></extra>",
     )
     fig.add_bar(
         x=x, y=lapsed, name="Lapsed (out)", marker_color=FLOW_LAPSED,
         customdata=flow["lapsed"].tolist(),
-        text=flow["lapsed"].tolist(), texttemplate="%{text:,}", textposition="inside",
+        text=flow["lapsed"].tolist(), texttemplate="<b>%{text:,}</b>", textposition="inside",
         insidetextfont=label_font,
         hovertemplate="%{x}<br>Lapsed %{customdata:,}<extra></extra>",
     )
@@ -97,16 +97,24 @@ def _build_flow(flow):
         )
     )
 
+    # Non-duplicate, evenly-spaced integer ticks: derive a round step from the largest
+    # stacked-in and stacked-out magnitude (the axis is signed, so it can't use a
+    # 0-based helper).
+    up_max = max((r + n for r, n in zip(retained, new)), default=0)
+    down_max = max(flow["lapsed"].tolist(), default=0)
+    dtick = nice_dtick(max(up_max, down_max), divisions=5)
+
     layout = economist_layout(
         title=dict(text="Buyers in vs out, by quarter",
                    font=dict(family=FONT_SERIF, size=22, color=INK)),
         barmode="relative",
         uniformtext=dict(minsize=8, mode="hide"),
         yaxis=dict(
-            title=dict(text="Households", font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
-            showgrid=True, gridcolor="#e6e4dd", showline=False, automargin=True,
+            title=dict(text="Households (per quarter)",
+                       font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
+            showgrid=True, gridcolor=GRIDLINE, showline=False, automargin=True,
             zeroline=True, zerolinecolor=REFERENCE, zerolinewidth=1.5,
-            tickformat=",.0f",
+            tickformat=",.0f", dtick=dtick,
             tickfont=dict(family=FONT_SANS, size=12, color=TEXT_SECONDARY),
         ),
         margin=dict(l=68, r=24, t=64, b=64),
@@ -125,7 +133,7 @@ def _build_trial_curve(curve):
             x=x, y=y, mode="lines+markers+text", name="Cumulative trial",
             line=dict(color=TRIAL_COLOR, width=3),
             marker=dict(size=7, color=TRIAL_COLOR),
-            text=[f"{v:.0%}" for v in y],
+            text=[f"<b>{v:.0%}</b>" for v in y],
             textposition="top center",
             textfont=dict(family=FONT_SANS, size=10, color=INK),
             cliponaxis=False,
@@ -140,7 +148,7 @@ def _build_trial_curve(curve):
         yaxis=dict(
             title=dict(text="Households that have tried (share)",
                        font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
-            showgrid=True, gridcolor="#e6e4dd", showline=False, automargin=True,
+            showgrid=True, gridcolor=GRIDLINE, showline=False, automargin=True,
             tickformat=".0%", rangemode="tozero",
             range=[0, y_max * 1.2 if y_max else 1],
             tickfont=dict(family=FONT_SANS, size=12, color=TEXT_SECONDARY),

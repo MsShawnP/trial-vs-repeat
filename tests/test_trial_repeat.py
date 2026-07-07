@@ -55,13 +55,18 @@ class TestMaturityCutoff:
 # ── The two launch stories reproduce ──────────────────────────────────
 class TestLaunchStories:
     def test_leaky_is_trial_heavy_repeat_light(self):
+        # Bounded both sides + pinned trier count so the seed-lock is load-bearing:
+        # a window/seed drift that moved the headline number fails here, not silently.
         s = tr.repeat_summary(52, sku=LEAKY)
-        assert s["n_triers"] > 800, "leaky item should have a big trial reach"
-        assert 0.10 <= s["repeat_rate"] <= 0.20, f"leaky repeat {s['repeat_rate']:.1%} outside 10-20%"
+        assert s["n_triers"] == 1234, f"leaky trier count drifted: {s['n_triers']}"
+        assert s["repeat_rate"] == pytest.approx(0.14, abs=0.02), (
+            f"leaky repeat {s['repeat_rate']:.1%} off the canonical ~14%")
 
     def test_sticky_is_high_repeat(self):
         s = tr.repeat_summary(52, sku=STICKY)
-        assert s["repeat_rate"] >= 0.45, f"sticky repeat {s['repeat_rate']:.1%} below 45%"
+        assert s["n_triers"] == 428, f"sticky trier count drifted: {s['n_triers']}"
+        assert s["repeat_rate"] == pytest.approx(0.51, abs=0.03), (
+            f"sticky repeat {s['repeat_rate']:.1%} off the canonical ~51%")
 
     def test_sticky_beats_leaky_at_every_window(self):
         for w in (8, 12, 26, 52):
@@ -129,3 +134,78 @@ class TestDepthOfRepeat:
         leaky = tr.depth_of_repeat(52, sku=LEAKY)["shares"]["1x"]
         sticky = tr.depth_of_repeat(52, sku=STICKY)["shares"]["1x"]
         assert leaky > sticky
+
+
+# ── Empty slice degrades gracefully (no crash, no NaN, no div-by-zero) ─
+class TestEmptySlice:
+    NONE = "__no_such_retailer__"
+
+    def test_repeat_summary_zeroed_not_error(self):
+        s = tr.repeat_summary(52, retailer_id=self.NONE)
+        assert s["n_triers"] == 0 and s["n_mature"] == 0
+        assert s["n_repeaters"] == 0 and s["repeat_rate"] == 0.0
+
+    def test_depth_zeroed_not_error(self):
+        d = tr.depth_of_repeat(52, retailer_id=self.NONE)
+        assert d["n_mature"] == 0
+        assert all(v == 0.0 for v in d["shares"].values())
+
+    def test_trial_curve_all_zero_but_twelve_rows(self):
+        c = tr.trial_curve(retailer_id=self.NONE)
+        assert len(c) == 12 and c["cumulative_triers"].iloc[-1] == 0
+
+    def test_cohort_and_flow_return_empty_frames(self):
+        assert tr.cohort_retention(retailer_id=self.NONE).empty
+        assert tr.buyer_flow(retailer_id=self.NONE)["new"].sum() == 0
+
+
+# ── buyer_flow accounting identities hold every row ───────────────────
+class TestBuyerFlowIdentities:
+    def _check(self, f):
+        assert (f["new"] - f["lapsed"] == f["net"]).all()
+        assert (f["retained"] + f["lapsed"] == f["prior_buyers"]).all()
+        assert (f["retained"] + f["new"] == f["current_buyers"]).all()
+
+    def test_brand_flow_identities(self):
+        self._check(tr.buyer_flow())
+
+    def test_item_flow_identities(self):
+        self._check(tr.buyer_flow(sku=LEAKY))
+
+    def test_whole_brand_flow_mirrors_panel(self):
+        import cinderhaven_household_panel as hp
+        ours = tr.buyer_flow().set_index("to_label")
+        theirs = hp.get_buyer_flow().set_index("to_label")
+        for col in ("new", "retained", "lapsed", "prior_buyers", "current_buyers"):
+            assert (ours[col] == theirs[col]).all(), f"{col} diverges from panel"
+
+
+# ── The empty-slice verdict must be "No data", never a false "Promotion" ─
+class TestVerdictNoData:
+    def test_excluded_item_reads_no_data_not_promotion(self):
+        # product_line 'AS' excludes both launch items (SB and PS lines).
+        vf = tr.item_verdict(52, 0.30, product_line="AS").set_index("sku_id")
+        assert (vf["verdict"] == tr.VERDICT_NO_DATA).all()
+        assert (vf["n_mature"] == 0).all()
+
+    def test_line_scoped_verdict_keeps_matching_item(self):
+        # 'SB' keeps the leaky item (line SB), excludes the sticky (line PS).
+        vf = tr.item_verdict(52, 0.30, product_line="SB").set_index("sku_id")
+        assert vf.loc[LEAKY, "verdict"] == tr.VERDICT_PROMOTION
+        assert vf.loc[STICKY, "verdict"] == tr.VERDICT_NO_DATA
+
+
+# ── Filter path through the math (product_line / retailer actually filter) ─
+class TestFilterPath:
+    def test_product_line_narrows_trial(self):
+        brand = tr.trial_curve()["cumulative_triers"].iloc[-1]
+        one_line = tr.trial_curve(product_line="SB")["cumulative_triers"].iloc[-1]
+        assert 0 < one_line < brand
+
+    def test_retailer_narrows_repeat_denominator(self):
+        brand = tr.repeat_summary(52)["n_triers"]
+        # Any real retailer id from the panel yields a strictly smaller trier base.
+        import cinderhaven_household_panel as hp
+        rid = next(iter(hp.RETAILERS))
+        scoped = tr.repeat_summary(52, retailer_id=rid)["n_triers"]
+        assert 0 < scoped < brand

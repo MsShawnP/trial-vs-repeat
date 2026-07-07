@@ -22,7 +22,8 @@ N_HOUSEHOLDS = panel.N_HOUSEHOLDS
 
 
 # ── Filtering ─────────────────────────────────────────────────────────
-def _tx(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def _tx(product_line: str | None = None, retailer_id: str | None = None,
+        sku: str | None = None) -> pd.DataFrame:
     """The transaction slice for a filter combination (brand-level unless sku given)."""
     tx = panel.get_transactions()
     if sku is not None:
@@ -41,7 +42,7 @@ def _first_purchase(tx: pd.DataFrame) -> pd.DataFrame:
     ever bought in the slice.
     """
     fp = (
-        tx.sort_values("date")
+        tx.sort_values("date", kind="stable")
         .drop_duplicates("household_id", keep="first")
         .loc[:, ["household_id", "date", "quarter_index", "quarter_label"]]
         .rename(columns={"date": "first_date", "quarter_index": "first_qi",
@@ -55,8 +56,18 @@ def _window(weeks: int) -> pd.Timedelta:
     return pd.Timedelta(weeks=weeks)
 
 
+def _mature_triers(fp: pd.DataFrame, win: pd.Timedelta) -> pd.DataFrame:
+    """The triers whose full repeat window has elapsed before the as-of date.
+
+    The single definition of maturity (right-censoring cutoff), so repeat_summary and
+    depth_of_repeat can never disagree on who is mature.
+    """
+    return fp[fp["first_date"] + win <= AS_OF]
+
+
 # ── Trial ─────────────────────────────────────────────────────────────
-def trial_curve(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def trial_curve(product_line: str | None = None, retailer_id: str | None = None,
+                sku: str | None = None) -> pd.DataFrame:
     """Cumulative first-ever-buyer curve, by quarter (calendar order, all 12 quarters).
 
     Columns: quarter_index, quarter_label, is_analysis, new_triers, cumulative_triers,
@@ -86,7 +97,8 @@ def trial_curve(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
 
 
 # ── Repeat (with maturity cutoff) ─────────────────────────────────────
-def repeat_summary(window_weeks: int, product_line=None, retailer_id=None, sku=None) -> dict:
+def repeat_summary(window_weeks: int, product_line: str | None = None,
+                   retailer_id: str | None = None, sku: str | None = None) -> dict:
     """Repeat rate within ``window_weeks`` of first purchase, maturity-cutoff applied.
 
     A trier is *mature* if a full window has elapsed between their first purchase and
@@ -103,8 +115,8 @@ def repeat_summary(window_weeks: int, product_line=None, retailer_id=None, sku=N
     fp = _first_purchase(tx)
     win = _window(window_weeks)
 
-    fp["mature"] = fp["first_date"] + win <= AS_OF
-    mature = fp[fp["mature"]]
+    mature = _mature_triers(fp, win)
+    n_immature = len(fp) - len(mature)
 
     if len(mature):
         joined = tx.merge(mature[["household_id", "first_date"]], on="household_id")
@@ -122,7 +134,7 @@ def repeat_summary(window_weeks: int, product_line=None, retailer_id=None, sku=N
     return {
         "n_triers": len(fp),
         "n_mature": len(mature),
-        "n_immature": int((~fp["mature"]).sum()),
+        "n_immature": n_immature,
         "n_repeaters": n_repeaters,
         "repeat_rate": repeat_rate,
         "maturity_cutoff_date": (AS_OF - win),
@@ -131,7 +143,8 @@ def repeat_summary(window_weeks: int, product_line=None, retailer_id=None, sku=N
 
 
 # ── Cohort retention triangle ─────────────────────────────────────────
-def cohort_retention(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def cohort_retention(product_line: str | None = None, retailer_id: str | None = None,
+                     sku: str | None = None) -> pd.DataFrame:
     """Retention triangle: cohort by first-purchase quarter × later-quarter retention.
 
     For cohort c (households whose first purchase was quarter c) and quarter q >= c,
@@ -168,7 +181,8 @@ def cohort_retention(product_line=None, retailer_id=None, sku=None) -> pd.DataFr
 
 
 # ── Depth of repeat ───────────────────────────────────────────────────
-def depth_of_repeat(window_weeks: int, product_line=None, retailer_id=None, sku=None) -> dict:
+def depth_of_repeat(window_weeks: int, product_line: str | None = None,
+                    retailer_id: str | None = None, sku: str | None = None) -> dict:
     """Distribution of purchase depth among mature triers, within the window.
 
     Depth = number of distinct purchase days in [first_purchase, first_purchase +
@@ -178,8 +192,7 @@ def depth_of_repeat(window_weeks: int, product_line=None, retailer_id=None, sku=
     tx = _tx(product_line, retailer_id, sku)
     fp = _first_purchase(tx)
     win = _window(window_weeks)
-    fp["mature"] = fp["first_date"] + win <= AS_OF
-    mature = fp[fp["mature"]]
+    mature = _mature_triers(fp, win)
 
     buckets = {"1x": 0, "2x": 0, "3x+": 0}
     if len(mature):
@@ -202,7 +215,8 @@ def depth_of_repeat(window_weeks: int, product_line=None, retailer_id=None, sku=
 
 
 # ── Buyer flow (leaky bucket), scope-aware ────────────────────────────
-def buyer_flow(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def buyer_flow(product_line: str | None = None, retailer_id: str | None = None,
+               sku: str | None = None) -> pd.DataFrame:
     """New / retained / lapsed buyer flow per adjacent quarter pair, for any scope.
 
     For the whole brand (sku=None) this mirrors the panel's ``get_buyer_flow``; with a
@@ -240,25 +254,39 @@ def buyer_flow(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
 
 
 # ── Per-item verdict: promotion or brand? ─────────────────────────────
-def item_verdict(window_weeks: int, threshold: float, product_line=None, retailer_id=None) -> pd.DataFrame:
+# Verdict labels. "No data" is distinct from "Promotion": a filter that excludes an
+# item (or leaves all its triers immature) must NOT read as a failed launch.
+VERDICT_BRAND = "Brand"
+VERDICT_PROMOTION = "Promotion"
+VERDICT_NO_DATA = "No data"
+
+
+def item_verdict(window_weeks: int, threshold: float, product_line: str | None = None,
+                 retailer_id: str | None = None) -> pd.DataFrame:
     """Trial reach vs mature repeat rate per launch item, with a promotion/brand verdict.
 
     A trial-heavy, repeat-light item (repeat below ``threshold``) reads as a promotion;
-    at or above threshold it reads as a brand. Columns: sku_id, role, launch_label,
-    n_triers, trial_reach, n_mature, repeat_rate, verdict.
+    at or above threshold it reads as a brand. When no mature triers exist for the item
+    under the current filter, the verdict is "No data" (repeat_rate is not meaningful),
+    never a false "Promotion". Columns: sku_id, role, launch_label, n_triers,
+    trial_reach, n_mature, repeat_rate, verdict.
     """
     rows = []
     for sku, cfg in panel.LAUNCH_ITEMS.items():
         summary = repeat_summary(window_weeks, product_line, retailer_id, sku=sku)
-        trial_reach = summary["n_triers"] / N_HOUSEHOLDS
         repeat_rate = summary["repeat_rate"]
-        verdict = "Brand" if repeat_rate >= threshold else "Promotion"
+        if summary["n_mature"] == 0:
+            verdict = VERDICT_NO_DATA
+        elif repeat_rate >= threshold:
+            verdict = VERDICT_BRAND
+        else:
+            verdict = VERDICT_PROMOTION
         rows.append({
             "sku_id": sku,
             "role": cfg["role"],
             "launch_label": panel.QUARTERS.loc[cfg["launch_quarter_index"], "label"],
             "n_triers": summary["n_triers"],
-            "trial_reach": trial_reach,
+            "trial_reach": summary["n_triers"] / N_HOUSEHOLDS,
             "n_mature": summary["n_mature"],
             "repeat_rate": repeat_rate,
             "verdict": verdict,

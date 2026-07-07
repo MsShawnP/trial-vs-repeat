@@ -48,10 +48,11 @@ def view_heading(title: str, blurb: str):
     )
 
 
-def metric_card(label, value, foot=None, delta=None, delta_class=None):
+def metric_card(label, value, foot=None, delta=None, delta_class=None, tip=None):
     """A stat card: small label, big value, optional delta line and footnote.
 
-    Primary/secondary hierarchy: value dominates, label and foot are muted.
+    Primary/secondary hierarchy: value dominates, label and foot are muted. ``tip`` sets
+    a hover tooltip on the card (exec rule: every metric has a tooltip).
     """
     children = [
         html.Div(label, className="metric-card-label"),
@@ -61,7 +62,7 @@ def metric_card(label, value, foot=None, delta=None, delta_class=None):
         children.append(html.Div(delta, className=f"metric-card-delta {delta_class or ''}".strip()))
     if foot is not None:
         children.append(html.Div(foot, className="metric-card-foot"))
-    return html.Div(children, className="metric-card")
+    return html.Div(children, className="metric-card", title=tip or "")
 
 
 def metric_cards_grid(cards, caption=None):

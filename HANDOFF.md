@@ -47,6 +47,40 @@ or run `/office-hours` first to stress-test the concept.
 
 ---
 
+## 2026-07-06 — Slice 4b: 5-agent code review, all findings resolved
+
+**Ran the multi-agent review** (correctness, kieran-python, maintainability, testing,
+project-standards). Drove every real finding to resolution:
+
+**Real bugs fixed:**
+- **Empty-slice false "Promotion" verdict** (correctness): a Product line / Retailer
+  filter that excluded a launch item made it read as a decisive "Promotion" with 0
+  triers, and the headline said "Neither launch kept its triers." Added a distinct
+  **"No data"** verdict state (item_verdict) + handled it in headline, cards, scatter,
+  and a data-derived cutoff note.
+- **cohort._build_triangle KeyError on empty frame** (testing): `drop_duplicates`
+  before the len-guards crashed on an empty cohort slice. Added `_empty_figure` guard.
+
+**Quality/standards fixed:** metric-card tooltips (exec rule); bold flow + trial-curve
+value labels; flow y-axis "Households (per quarter)" + explicit non-duplicate dtick;
+`#e6e4dd` → `GRIDLINE` token (3 spots); deleted dead code (get_metrics, launch_items,
+count_yaxis→nice_dtick, fmt_signed_number, VERDICT_MIXED, REPEAT_COLOR, ALL_QUARTERS);
+extracted `_mature_triers` (one maturity definition); derived the verdict cutoff note
+from data; typed all filter params `str | None`; stable sort in `_first_purchase`.
+
+**Tests added (+25):** No-data verdict regression, empty-slice safety for every math
+fn + every figure builder (incl. the cohort crash), buyer_flow accounting identities +
+panel mirror, parse_filter_state + scope_sku, product_line/retailer filter path,
+figure builders exercised, exec-content contract (headline/why/glossary/synthetic),
+filter tooltips; tightened launch-story assertions (bounded both sides + pinned trier
+counts 1234/428). **47 app + 49 panel = 96 green, ruff clean.**
+
+**Verified in browser:** all 5 charts paint, cards carry tooltips, no JS errors.
+
+**Next:** redeploy the fixed code; `/publish` when Shawn's ready; her copy pass on drafts.
+
+---
+
 ## 2026-07-06 — Slice 4a: DEPLOYED and LIVE
 
 **Deployed and LIVE at https://leakybucket.lailarallc.com** (HTTPS, Let's Encrypt cert

@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, callback, dcc, html
 
 from app import panel_data
+from app import trial_repeat as tr
 from app.charts import CHART_CONFIG, economist_layout, pct_yaxis
 from app.components import (
     definitions_panel,
@@ -26,10 +27,18 @@ from app.constants import (
     REFERENCE,
     TEXT_SECONDARY,
     VERDICT_BRAND,
+    VERDICT_NO_DATA,
     VERDICT_PROMOTION,
     fmt_number,
     fmt_pct,
 )
+
+# Map each verdict label to its marker/badge colour.
+_VERDICT_COLOR = {
+    tr.VERDICT_BRAND: VERDICT_BRAND,
+    tr.VERDICT_PROMOTION: VERDICT_PROMOTION,
+    tr.VERDICT_NO_DATA: VERDICT_NO_DATA,
+}
 
 _WHY = (
     "Household penetration can rise every quarter while the business quietly dies: if "
@@ -66,14 +75,26 @@ def layout():
 
 
 def _headline_children(vf, window_weeks):
-    """A plain-language verdict a CFO can't misread, built from the two items' rows."""
-    brands = vf[vf["verdict"] == "Brand"]
-    promos = vf[vf["verdict"] == "Promotion"]
-    lead = "One of these launches is a brand. The other is a promotion."
-    if len(brands) == len(vf):
-        lead = "Both launches kept their triers — both read as brands."
-    elif len(promos) == len(vf):
-        lead = "Neither launch kept its triers — both read as promotions."
+    """A plain-language verdict a CFO can't misread, built from the items with data.
+
+    Items excluded by the current filter (verdict 'No data') are set aside — an empty
+    slice must never read as a failed launch.
+    """
+    scored = vf[vf["verdict"] != tr.VERDICT_NO_DATA]
+    brands = scored[scored["verdict"] == tr.VERDICT_BRAND]
+    promos = scored[scored["verdict"] == tr.VERDICT_PROMOTION]
+
+    if len(scored) == 0:
+        lead = "No launch item matches this filter — clear the product line or retailer to compare."
+    elif len(brands) and len(promos):
+        lead = "One of these launches is a brand. The other is a promotion."
+    elif len(brands) == len(scored):
+        lead = "These triers came back — this reads as a brand." if len(scored) == 1 \
+            else "Both launches kept their triers — both read as brands."
+    else:
+        lead = "These triers didn't come back — this reads as a promotion." if len(scored) == 1 \
+            else "Neither launch kept its triers — both read as promotions."
+
     return [
         html.Div(lead, className="verdict-figure"),
         html.P(
@@ -87,15 +108,26 @@ def _headline_children(vf, window_weeks):
 def _cards(vf, window_weeks):
     cards = []
     for row in vf.itertuples(index=False):
-        is_brand = row.verdict == "Brand"
+        no_data = row.verdict == tr.VERDICT_NO_DATA
+        if no_data:
+            value, delta_class = "—", "delta-flat"
+            foot = "No triers under the current product-line / retailer filter."
+        else:
+            value = fmt_pct(row.repeat_rate)
+            delta_class = "delta-up" if row.verdict == tr.VERDICT_BRAND else "delta-down"
+            foot = (f"{fmt_pct(row.trial_reach)} trial reach · "
+                    f"{fmt_number(row.n_mature)} mature triers · {window_weeks}w window")
         cards.append(
             metric_card(
                 label=f"{row.role.title()} launch — {row.sku_id}",
-                value=fmt_pct(row.repeat_rate),
+                value=value,
                 delta=row.verdict,
-                delta_class="delta-up" if is_brand else "delta-down",
-                foot=f"{fmt_pct(row.trial_reach)} trial reach · "
-                f"{fmt_number(row.n_mature)} mature triers · {window_weeks}w window",
+                delta_class=delta_class,
+                foot=foot,
+                tip=f"Repeat rate = share of {row.sku_id}'s triers who bought it again "
+                f"within {window_weeks} weeks, counting only triers whose window has "
+                "fully elapsed (maturity cutoff). At or above "
+                f"{fmt_pct(BRAND_REPEAT_THRESHOLD, 0)} reads as a brand; below, a promotion.",
             )
         )
     return metric_cards_grid(
@@ -106,17 +138,23 @@ def _cards(vf, window_weeks):
 
 
 def _build_scatter(vf):
-    """Trial reach (x) vs repeat rate (y) per launch item, with the brand-line marked."""
+    """Trial reach (x) vs repeat rate (y) per launch item, with the brand-line marked.
+
+    Items with no data under the current filter are omitted (they have no meaningful
+    trial-reach/repeat point), never plotted at the origin as if they failed.
+    """
+    plotted = vf[vf["verdict"] != tr.VERDICT_NO_DATA]
+
     fig = go.Figure()
-    for row in vf.itertuples(index=False):
-        color = VERDICT_BRAND if row.verdict == "Brand" else VERDICT_PROMOTION
+    for row in plotted.itertuples(index=False):
+        color = _VERDICT_COLOR.get(row.verdict, REFERENCE)
         fig.add_trace(
             go.Scatter(
                 x=[row.trial_reach],
                 y=[row.repeat_rate],
                 mode="markers+text",
                 marker=dict(size=22, color=color, line=dict(color=INK, width=1)),
-                text=[f"  {row.role.title()} ({row.sku_id})"],
+                text=[f"  <b>{row.role.title()} ({row.sku_id})</b>"],
                 textposition="middle right",
                 textfont=dict(family=FONT_SANS, size=12, color=INK),
                 cliponaxis=False,
@@ -128,8 +166,16 @@ def _build_scatter(vf):
             )
         )
 
-    x_max = float(vf["trial_reach"].max()) if len(vf) else 0.3
-    y_max = max(float(vf["repeat_rate"].max()) if len(vf) else 0.6, BRAND_REPEAT_THRESHOLD)
+    if len(plotted) == 0:
+        fig.add_annotation(
+            text="No launch item matches this filter.",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            font=dict(family=FONT_SANS, size=15, color=TEXT_SECONDARY),
+        )
+
+    x_max = float(plotted["trial_reach"].max()) if len(plotted) else 0.3
+    y_max = max(float(plotted["repeat_rate"].max()) if len(plotted) else 0.6,
+                BRAND_REPEAT_THRESHOLD)
 
     layout = economist_layout(
         title=dict(
@@ -173,11 +219,17 @@ def register_callbacks():
 
         _scope, window, line, retailer = parse_filter_state(filter_json)
         vf = panel_data.item_verdict(window, BRAND_REPEAT_THRESHOLD, line, retailer)
-        # Both launch items are always mature, so the cutoff note reports the window only.
-        cutoff = (
-            f"Repeat window: {window} weeks. Both launch items trialed in 2023-Q2, so "
-            "every trier is fully mature — no right-censoring on this comparison."
-        )
+        # Derive the right-censoring note from the data, not a hardcoded claim.
+        scored = vf[vf["verdict"] != tr.VERDICT_NO_DATA]
+        immature = int((scored["n_triers"] - scored["n_mature"]).sum()) if len(scored) else 0
+        if len(scored) == 0:
+            cutoff = f"Repeat window: {window} weeks. No launch item matches the current filter."
+        elif immature == 0:
+            cutoff = (f"Repeat window: {window} weeks. Every trier of the shown item(s) is "
+                      "fully mature — no right-censoring on this comparison.")
+        else:
+            cutoff = (f"Repeat window: {window} weeks. {fmt_number(immature)} recent trier(s) "
+                      "are still within their window and excluded (maturity cutoff).")
         return (
             _headline_children(vf, window),
             _cards(vf, window),

@@ -18,6 +18,7 @@ from app.constants import (
     DEPTH_COLORS,
     FONT_SANS,
     FONT_SERIF,
+    GRIDLINE,
     HK_35,
     INK,
     TEXT_SECONDARY,
@@ -58,8 +59,21 @@ def layout():
     )
 
 
+def _empty_figure(message):
+    """A blank Economist-styled figure carrying a centered note (empty-slice guard)."""
+    fig = go.Figure()
+    fig.add_annotation(text=message, xref="paper", yref="paper", x=0.5, y=0.5,
+                       showarrow=False,
+                       font=dict(family=FONT_SANS, size=15, color=TEXT_SECONDARY))
+    fig.update_layout(**economist_layout(showlegend=False,
+                                         xaxis=dict(visible=False), yaxis=dict(visible=False)))
+    return fig
+
+
 def _build_triangle(ret):
     """Heatmap: cohort (row) × offset quarters-since-first (col), z = retention share."""
+    if ret.empty:
+        return _empty_figure("No cohorts under the current filter.")
     cohorts = ret.drop_duplicates("cohort_qi").sort_values("cohort_qi")
     row_order = cohorts["cohort_label"].tolist()
     sizes = dict(zip(cohorts["cohort_label"], cohorts["cohort_size"]))
@@ -135,7 +149,7 @@ def _build_depth(depth, window_weeks):
                    font=dict(family=FONT_SERIF, size=22, color=INK)),
         yaxis=dict(title=dict(text="Share of mature triers",
                               font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
-                   showgrid=True, gridcolor="#e6e4dd", showline=False, automargin=True,
+                   showgrid=True, gridcolor=GRIDLINE, showline=False, automargin=True,
                    tickformat=".0%", range=[0, y_max * 1.2 if y_max else 1],
                    tickfont=dict(family=FONT_SANS, size=12, color=TEXT_SECONDARY)),
         showlegend=False,

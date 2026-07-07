@@ -41,7 +41,7 @@ FONT_SANS = f"{LL_SANS}, Source Sans Pro, Helvetica Neue, Helvetica, Arial, sans
 # and repeat-light (leaky, the discontinuation risk).
 VERDICT_BRAND = HK_35        # teal — repeat is healthy: real adoption
 VERDICT_PROMOTION = TOKYO_40  # berry — trial-heavy / repeat-light: expensive sampling
-VERDICT_MIXED = CHICAGO_20   # navy — in between
+VERDICT_NO_DATA = REFERENCE  # muted grey — item excluded by the filter / no mature triers
 
 # Leaky-bucket flow semantics (buyers moving in and out of the bucket per period).
 FLOW_NEW = HK_35        # teal — buyers flowing IN (new this period)
@@ -52,9 +52,8 @@ FLOW_NET = INK          # ink — the net line
 # Depth-of-repeat shades (1x / 2x / 3x+), light → dark as loyalty deepens.
 DEPTH_COLORS = {"1x": REFERENCE, "2x": HK_35, "3x+": CHICAGO_20}
 
-# Trial and repeat curve colours.
+# Trial curve colour.
 TRIAL_COLOR = CHICAGO_20   # navy — cumulative first-ever buyers
-REPEAT_COLOR = HK_35       # teal — those who came back
 
 # The verdict threshold used for the "promotion or brand?" flag. A category-dependent
 # copy/product decision; stated in-app and revisited in the Slice 3 copy pass.
@@ -78,11 +77,3 @@ def fmt_number(value):
     if _is_missing(value):
         return "N/A"
     return f"{value:,.0f}"
-
-
-def fmt_signed_number(value):
-    """Format a signed count ('+1,240' / '-880') for flow labels."""
-    if _is_missing(value):
-        return "N/A"
-    sign = "+" if value >= 0 else "−"  # true minus sign
-    return f"{sign}{abs(value):,.0f}"

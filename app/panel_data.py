@@ -25,7 +25,6 @@ AS_OF_DATE = panel.DEMO_AS_OF_DATE
 N_HOUSEHOLDS = panel.N_HOUSEHOLDS
 ANALYSIS_QUARTERS = list(panel.ANALYSIS_QUARTER_LABELS)
 BURN_IN_QUARTERS = list(panel.BURN_IN_QUARTER_LABELS)
-ALL_QUARTERS = BURN_IN_QUARTERS + ANALYSIS_QUARTERS
 
 # Repeat window is a first-class parameter (the right-censoring credibility piece):
 # a trier only counts as "had a chance to repeat" once this many weeks have elapsed
@@ -104,12 +103,8 @@ def _normalize(value: str | None) -> str | None:
 
 
 # ── Thin pass-throughs to the shared panel ───────────────────────────
-def get_metrics(product_line: str | None = None, retailer_id: str | None = None) -> pd.DataFrame:
-    """Per-quarter metrics for a filter combination (thin pass-through)."""
-    return panel.get_period_metrics(_normalize(product_line), _normalize(retailer_id))
-
-
-def get_flow(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def get_flow(product_line: str | None = None, retailer_id: str | None = None,
+             sku: str | None = None) -> pd.DataFrame:
     """New/retained/lapsed/net buyer flow for a filter combination — the leaky bucket.
 
     Scope-aware: whole brand (sku=None) or one launch item. Each adjacent quarter
@@ -119,40 +114,40 @@ def get_flow(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
     return trial_repeat.buyer_flow(_normalize(product_line), _normalize(retailer_id), sku)
 
 
-def launch_items() -> pd.DataFrame:
-    """The two seeded launch items (#4's demo): the leaky one and the sticky one."""
-    return panel.get_launch_items()
-
-
 # ── Trial/repeat/cohort accessors (compute in app.trial_repeat) ──────
 # Views import these from the seam, not the math module, so the "no DB, in-process"
 # contract and the filter vocabulary stay in one place.
 from app import trial_repeat  # noqa: E402  (imported here to keep the seam the single import)
 
 
-def trial_curve(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def trial_curve(product_line: str | None = None, retailer_id: str | None = None,
+                sku: str | None = None) -> pd.DataFrame:
     """Cumulative first-ever-buyer curve by quarter for a filter combination."""
     return trial_repeat.trial_curve(_normalize(product_line), _normalize(retailer_id), sku)
 
 
-def repeat_summary(window_weeks, product_line=None, retailer_id=None, sku=None) -> dict:
+def repeat_summary(window_weeks: int, product_line: str | None = None,
+                   retailer_id: str | None = None, sku: str | None = None) -> dict:
     """Maturity-cutoff repeat rate within ``window_weeks`` for a filter combination."""
     return trial_repeat.repeat_summary(window_weeks, _normalize(product_line),
                                        _normalize(retailer_id), sku)
 
 
-def cohort_retention(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+def cohort_retention(product_line: str | None = None, retailer_id: str | None = None,
+                     sku: str | None = None) -> pd.DataFrame:
     """Cohort-by-first-purchase-quarter retention triangle for a filter combination."""
     return trial_repeat.cohort_retention(_normalize(product_line), _normalize(retailer_id), sku)
 
 
-def depth_of_repeat(window_weeks, product_line=None, retailer_id=None, sku=None) -> dict:
+def depth_of_repeat(window_weeks: int, product_line: str | None = None,
+                    retailer_id: str | None = None, sku: str | None = None) -> dict:
     """1x / 2x / 3x+ depth distribution among mature triers for a filter combination."""
     return trial_repeat.depth_of_repeat(window_weeks, _normalize(product_line),
                                         _normalize(retailer_id), sku)
 
 
-def item_verdict(window_weeks, threshold, product_line=None, retailer_id=None) -> pd.DataFrame:
+def item_verdict(window_weeks: int, threshold: float, product_line: str | None = None,
+                 retailer_id: str | None = None) -> pd.DataFrame:
     """Per-launch-item trial reach, repeat rate, and promotion/brand verdict."""
     return trial_repeat.item_verdict(window_weeks, threshold, _normalize(product_line),
                                      _normalize(retailer_id))
