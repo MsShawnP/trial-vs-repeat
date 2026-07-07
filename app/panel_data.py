@@ -30,8 +30,15 @@ ALL_QUARTERS = BURN_IN_QUARTERS + ANALYSIS_QUARTERS
 # Repeat window is a first-class parameter (the right-censoring credibility piece):
 # a trier only counts as "had a chance to repeat" once this many weeks have elapsed
 # since their first purchase. Category-dependent; exposed in the filter bar.
-REPEAT_WINDOW_OPTIONS = [8, 12]
-DEFAULT_REPEAT_WINDOW_WEEKS = 12
+#
+# Default is 52 weeks, NOT the brainstorm's 8/12: the shared panel models repeat
+# spread across quarters (~0.5/quarter), so an 8/12-week window shows near-zero
+# repeat for both launch items and the "15% doomed vs 45%+ winner" story only
+# emerges at ~52 weeks (matching #3's canonical 16%/55%). These categories (pantry
+# staples, snack bites) repeat on a quarterly cycle, so a 12-month window is the
+# honest read. Measured, not assumed — see the probe in HANDOFF.md / Slice 1.
+REPEAT_WINDOW_OPTIONS = [8, 12, 26, 52]
+DEFAULT_REPEAT_WINDOW_WEEKS = 52
 
 _warmed = False
 
@@ -97,3 +104,37 @@ def get_flow(product_line: str | None = None, retailer_id: str | None = None) ->
 def launch_items() -> pd.DataFrame:
     """The two seeded launch items (#4's demo): the leaky one and the sticky one."""
     return panel.get_launch_items()
+
+
+# ── Trial/repeat/cohort accessors (compute in app.trial_repeat) ──────
+# Views import these from the seam, not the math module, so the "no DB, in-process"
+# contract and the filter vocabulary stay in one place.
+from app import trial_repeat  # noqa: E402  (imported here to keep the seam the single import)
+
+
+def trial_curve(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+    """Cumulative first-ever-buyer curve by quarter for a filter combination."""
+    return trial_repeat.trial_curve(_normalize(product_line), _normalize(retailer_id), sku)
+
+
+def repeat_summary(window_weeks, product_line=None, retailer_id=None, sku=None) -> dict:
+    """Maturity-cutoff repeat rate within ``window_weeks`` for a filter combination."""
+    return trial_repeat.repeat_summary(window_weeks, _normalize(product_line),
+                                       _normalize(retailer_id), sku)
+
+
+def cohort_retention(product_line=None, retailer_id=None, sku=None) -> pd.DataFrame:
+    """Cohort-by-first-purchase-quarter retention triangle for a filter combination."""
+    return trial_repeat.cohort_retention(_normalize(product_line), _normalize(retailer_id), sku)
+
+
+def depth_of_repeat(window_weeks, product_line=None, retailer_id=None, sku=None) -> dict:
+    """1x / 2x / 3x+ depth distribution among mature triers for a filter combination."""
+    return trial_repeat.depth_of_repeat(window_weeks, _normalize(product_line),
+                                        _normalize(retailer_id), sku)
+
+
+def item_verdict(window_weeks, threshold, product_line=None, retailer_id=None) -> pd.DataFrame:
+    """Per-launch-item trial reach, repeat rate, and promotion/brand verdict."""
+    return trial_repeat.item_verdict(window_weeks, threshold, _normalize(product_line),
+                                     _normalize(retailer_id))

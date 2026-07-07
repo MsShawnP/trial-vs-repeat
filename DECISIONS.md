@@ -19,6 +19,19 @@ Each entry:
 
 ## Architecture & Pipeline
 
+### 2026-07-06 — Vendor the shared packages into `packages/` (series pattern)
+- **Why:** Fly's Docker build context is this repo only; it can't reach a sibling
+  repo path. The established series pattern (Spin Rate, Decompose) vendors shared
+  packages into each repo's `packages/` and pip-installs them in the Dockerfile.
+  #4 vendors `lailara-palette`, `cinderhaven-store-universe`, and
+  `cinderhaven-household-panel` from Decompose. The panel is a seed-locked
+  deterministic generator, so the vendored copy produces identical data — no
+  divergent dataset, honoring "reuse the shared package, no second copy of the data."
+- **Scope:** global (build + deploy)
+- **Do not:** edit the vendored panel here. If the canonical panel changes in
+  Decompose (#3), re-sync the vendored copy under the canonical change protocol —
+  it must not drift. Any change that would move canonical figures needs Shawn's approval.
+
 ### 2026-07-06 — Use the in-process `cinderhaven_household_panel` package; no database
 - **Why:** Matches the architecture locked for Decompose (#3). Keeps Leaky
   Bucket off the cinderhaven-db fragility surface (cred sync, 503
@@ -48,6 +61,21 @@ Each entry:
   change under the canonical change protocol + Shawn's approval.
 
 ---
+
+## Data & Schema (continued)
+
+### 2026-07-06 — Repeat window default is 52 weeks, not the brainstorm's 8/12
+- **Why:** Measured the shared panel's actual repeat timing (probe in HANDOFF.md).
+  The panel models launch repeat spread across quarters (~0.5/quarter), so repeat
+  within 8/12 weeks is near-zero (leaky 1.6%/3.5%, sticky 4.7%/10.3%) and the
+  advertised "~15% doomed vs 45%+ winner" story only emerges at ~52 weeks (leaky
+  14.3%, sticky 51.4% — matching #3's canonical 16%/55% "ever repeats"). These
+  categories (pantry staples, snack bites) repeat on a quarterly cycle, so a 12-month
+  window is the honest read. Window stays a parameter (options 8/12/26/52).
+- **Scope:** `app/panel_data.py` DEFAULT_REPEAT_WINDOW_WEEKS, filter bar default.
+- **Do not:** change the panel to hit the 8/12-week numbers — the panel is #3-owned
+  and seed-locked. If Shawn wants the brief's 8/12 default, it's a one-constant change
+  here; the sticky>leaky contrast holds at every window regardless.
 
 ## Visualization
 

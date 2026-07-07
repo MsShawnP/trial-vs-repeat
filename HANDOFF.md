@@ -47,6 +47,41 @@ or run `/office-hours` first to stress-test the concept.
 
 ---
 
+## 2026-07-06 — Slices 0 & 1 built (foundation + metric core)
+
+**Did:**
+- **Slice 0 (foundation):** vendored the three shared packages (lailara-palette,
+  cinderhaven-store-universe, cinderhaven-household-panel) from Decompose into
+  `packages/`; created app factory + branded loading overlay, constants (palette
+  tokens + trial/repeat vocabulary), `panel_data.py` data seam (warm cache, no DB),
+  Dockerfile/fly.toml/wsgi mirroring Decompose. Smoke-tested: panel warms (5000 hh,
+  4 burn-in + 8 analysis q, 53.8k tx), both stories reproduce.
+- **Slice 1 (metric core):** `app/trial_repeat.py` — first-ever-purchase trial curve,
+  repeat rate within N weeks WITH maturity cutoff (right-censoring), cohort retention
+  triangle, depth of repeat, per-item promotion/brand verdict. Wired through
+  `panel_data`. 19 new tests + 49 vendored-panel tests = **68 green**.
+
+**Repeat-window probe (grounds the 52w default decision):** measured repeat vs window
+on the two launch items —
+| window | leaky | sticky |
+|--------|-------|--------|
+| 8w  | 1.6%  | 4.7%  |
+| 12w | 3.5%  | 10.3% |
+| 26w | 9.4%  | 35.3% |
+| 52w | 14.3% | 51.4% |
+| ever| 16.2% | 55.1% |
+The brief's 8/12w default would show near-zero repeat; the "15%/45%" story needs ~52w.
+Defaulted to 52w, window still a parameter. See DECISIONS.md. **Flag for Shawn:** if
+she wants the brief's 8/12 default, it's a one-constant change.
+
+**State:** app boots as far as imports (layout.py not built yet — that's Slice 3).
+Tests green. Not deployed.
+
+**Next:** Slice 2 — charts.py + the four views (cohort triangle, trial/repeat curves,
+leaky-bucket flow, promotion-or-brand verdict + two-launch side-by-side).
+
+---
+
 ## Build brainstorm (seed for /clarify)
 
 **Business question:** "Of the people who tried us, how many came back —
