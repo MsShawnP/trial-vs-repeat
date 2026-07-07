@@ -28,6 +28,25 @@ subdomain `leakybucket.lailarallc.com` (confirm before deploy).
 
 ---
 
+## 2026-07-06 — Un-parked: #3 Decompose shipped
+
+**Started from:** Post-/clarify parked state (blocked on #3).
+
+**Did:** Confirmed #3 Decompose is fully shipped (built, code-review passed
+2026-07-06, custom domain set up). Verified the shared
+`cinderhaven_household_panel` now carries everything #4 needs: burn-in (4q
+2023 + 8q analysis 2024-25), both launch seeds computed via `LAUNCH_ITEMS`
+(`CHP-SB-010` leaky / `CHP-PS-010` sticky, gated by `test_seeded_stories.py`),
+deterministic seed-lock. Un-parked PLAN.md, updated memory.
+
+**State:** #4 un-blocked and ready to build at Slice 0. No app code written yet.
+
+**Next:** Decide whether to start the build (Slice 0: install/verify panel,
+read carried-in memory, vendor Spin Rate chrome, pull UCI cohort machinery)
+or run `/office-hours` first to stress-test the concept.
+
+---
+
 ## Build brainstorm (seed for /clarify)
 
 **Business question:** "Of the people who tried us, how many came back —

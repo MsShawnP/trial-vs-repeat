@@ -5,18 +5,21 @@ session. For session-by-session state, see HANDOFF.md.
 
 ---
 
-## ⛔ BLOCKED — parked pending #3 Decompose panel lock
+## ✅ UN-PARKED — #3 Decompose shipped, panel ready (2026-07-06)
 
-**Do not build the app yet.** As of 2026-07-06, #3 Decompose is mid-build
-(writing its visualizations). Its shared `cinderhaven_household_panel` is
-**not seed-locked** and is missing the **burn-in window** and the **two
-launch seeds** (doomed high-trial/~15% repeat; quiet modest-trial/45%+
-repeat) that #4 depends on. Building #4 on the unlocked panel risks rework.
+The blocker is cleared. #3 Decompose is fully shipped (built, code-review
+passed, custom domain set up). Its shared `cinderhaven_household_panel`
+(`decompose-sales-penetration/packages/cinderhaven-household-panel/`) was
+built with #4 in mind and has everything #4 needs, verified:
+- Burn-in: 4 quarters (2023) + 8 analysis quarters (2024-2025).
+- Two launch seeds via `hp.LAUNCH_ITEMS`: `CHP-SB-010` (leaky, 10-20%
+  repeat, 800+ triers) + `CHP-PS-010` (sticky, 45%+ repeat). Computed, not
+  hardcoded; gated by `test_seeded_stories.py`.
+- Seed-lock: deterministic `_rng.py` + `test_canonical.py`.
+- API #4 consumes: `get_households`, `get_transactions`,
+  `get_period_metrics`, `get_buyer_flow`, `LAUNCH_ITEMS`, calendar labels.
 
-**Un-park trigger:** begin the build arc below only when #3's panel is
-built, **seed-locked, tests green**, and contains the burn-in window +
-both launch stories. Adding those to the panel is a **#3 change** (canonical
-change protocol + Shawn's approval), not a #4-local hack.
+**The build arc below is now clear to start at Slice 0.**
 
 ---
 
@@ -99,8 +102,6 @@ Visualizations get reviewed in their own slice, not deferred to polish.
 
 ## Out of scope for this arc
 
-- Any app/chart code, panel changes, or deployment **until the un-park
-  trigger is met**.
 - Anything requiring a database — architecture is in-process panel, no DB.
 - Panel changes (burn-in, seeded launches) — those belong to #3 Decompose.
 - Building against the current unlocked panel (rework risk — ruled out).
