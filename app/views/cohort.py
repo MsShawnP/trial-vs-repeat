@@ -33,7 +33,7 @@ _WHY = (
     "repeat yet. Depth separates one-and-done triers from households building a habit."
 )
 
-_RETENTION_SCALE = [[0.0, CANVAS], [0.15, "#e4ede9"], [1.0, HK_35]]
+_RETENTION_SCALE = [[0.0, CANVAS], [0.15, "#e4f5f0"], [1.0, HK_35]]
 
 
 def layout():

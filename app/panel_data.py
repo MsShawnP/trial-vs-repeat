@@ -33,7 +33,7 @@ BURN_IN_QUARTERS = list(panel.BURN_IN_QUARTER_LABELS)
 # Default is 52 weeks, NOT the brainstorm's 8/12: the shared panel models repeat
 # spread across quarters (~0.5/quarter), so an 8/12-week window shows near-zero
 # repeat for both launch items and the "15% doomed vs 45%+ winner" story only
-# emerges at ~52 weeks (matching #3's canonical 16%/55%). These categories (pantry
+# emerges at ~52 weeks (matching #3's canonical 14%/51%). These categories (pantry
 # staples, snack bites) repeat on a quarterly cycle, so a 12-month window is the
 # honest read. Measured, not assumed — see the probe in HANDOFF.md / Slice 1.
 REPEAT_WINDOW_OPTIONS = [8, 12, 26, 52]
