@@ -659,7 +659,7 @@ html, body {
     --ag-header-height: 36px;
     --ag-font-family: var(--ll-sans);
     --ag-header-background-color: var(--ll-chicago-95);
-    --ag-odd-row-background-color: #faf9f6;
+    --ag-odd-row-background-color: #ffffff;
 }
 .decompose-grid .ag-cell { white-space: nowrap; }
 
