@@ -79,7 +79,22 @@ titles 26px (DS 22), stat numbers 30px (DS 28), verdict headline 40px (off-scale
 lailara-frame. Fixing here alone would desync the 5-tool series.
 
 **State:** 48 tests green, ruff clean. DS fixes verified in-browser (28px hero, #595959 text,
-heatmap anchor swapped, no overflow). Still not redeployed.
+heatmap anchor swapped, no overflow).
+
+### Same session — DEPLOYED
+
+The spawned type-scale task (task_6e807fd7) committed `1c79467` (view-title 22px, verdict
+64px, metric 28px, wordmark 26px, lailara-frame v1.2.0, loading-brand 26px — typography
+only, no data/logic). Waited for it per Shawn, verified clean HEAD + 48 tests green, then
+**`flyctl deploy`** — machine started, health checks passed, DNS verified (image 106 MB).
+**Verified live at https://leakybucket.lailarallc.com:** /health 200; purpose hero, named
+verdict (64px, callback-rendered), cohort + depth captions, 26px wordmark all present; no
+overflow. All of today's work (comprehension pass, review fixes, DS fixes, type-scale
+reconciliation) is now LIVE. HEAD = 1c79467.
+
+**Open (Shawn's call):** stale DS path in global CLAUDE.md (offered to fix); deferred
+security container nits + data-review findings 3/4. The ui-review `.venv` task
+(task_aa9f3752) is still running in its own session (different repo).
 
 ---
 
