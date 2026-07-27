@@ -30,6 +30,8 @@ INK = LL_INK
 # ── Accent hues (default shades) ──
 CHICAGO_20 = LL_CHICAGO   # navy
 HK_35 = LL_HK             # teal
+HK_85 = "#b5e4d8"         # Hong Kong-85 — lightest usable data stop (DS: step 95 is
+                          # surface-only). Not exported as a named lailara-palette const.
 TOKYO_40 = LL_TOKYO       # berry
 
 # ── Typography (for Plotly) ──

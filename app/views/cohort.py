@@ -20,6 +20,7 @@ from app.constants import (
     FONT_SERIF,
     GRIDLINE,
     HK_35,
+    HK_85,
     INK,
     TEXT_SECONDARY,
     fmt_number,
@@ -33,7 +34,7 @@ _WHY = (
     "repeat yet. Depth separates one-and-done triers from households building a habit."
 )
 
-_RETENTION_SCALE = [[0.0, CANVAS], [0.15, "#e4f5f0"], [1.0, HK_35]]
+_RETENTION_SCALE = [[0.0, CANVAS], [0.15, HK_85], [1.0, HK_35]]
 
 
 def layout():

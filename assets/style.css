@@ -446,7 +446,7 @@ html, body {
 }
 .page-intro-lead {
     font-family: var(--ll-serif);
-    font-size: 30px;
+    font-size: 28px;   /* DS benchmark-value step (desktop); 24px mobile below */
     font-weight: 700;
     line-height: 1.15;
     color: var(--ll-ink, #0d0d0d);
@@ -488,7 +488,7 @@ html, body {
 .synthetic-note {
     font-family: var(--ll-sans);
     font-size: 13px;
-    color: var(--ll-reference, #666);
+    color: var(--ll-london-35, #595959);
 }
 
 /* View heading + blurb */
@@ -533,7 +533,7 @@ html, body {
 }
 .verdict-change.delta-up { color: var(--ll-hk-25); }
 .verdict-change.delta-down { color: var(--ll-tokyo-40); }
-.verdict-change.delta-flat { color: var(--ll-reference, #666); }
+.verdict-change.delta-flat { color: var(--ll-london-35, #595959); }
 .verdict-sentence {
     font-family: var(--ll-sans);
     font-size: 17px;
@@ -563,7 +563,7 @@ html, body {
     font-family: var(--ll-sans);
     font-size: 14px;
     line-height: 1.5;
-    color: var(--ll-reference, #666);
+    color: var(--ll-london-35, #595959);
     max-width: 54ch;
     margin: 0 auto 10px;
 }
@@ -581,7 +581,7 @@ html, body {
 .chart-caption {
     font-family: var(--ll-sans);
     font-size: 13px;
-    color: var(--ll-reference, #666);
+    color: var(--ll-london-35, #595959);
     margin: 6px 0 18px;
     text-align: center;
 }
@@ -627,7 +627,7 @@ html, body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--ll-reference, #666);
+    color: var(--ll-london-35, #595959);
     margin-bottom: 10px;
 }
 .metric-cards-grid {
@@ -669,7 +669,7 @@ html, body {
 .metric-card-prev {
     font-family: var(--ll-sans);
     font-size: 13px;
-    color: var(--ll-reference, #666);
+    color: var(--ll-london-35, #595959);
 }
 .metric-card-delta {
     font-family: var(--ll-sans);

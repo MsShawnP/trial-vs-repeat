@@ -53,6 +53,34 @@ image by digest); data-review findings 3 (cosmetic: trial_reach shown next to n_
 harmless with current data) and 4 (nit: heatmap formats NaN before masking). None block.
 **Redeploy** to pick up these UI changes when ready.
 
+### Same session — UI review + Lailara design-system audit
+
+**UI review (ui-review-skill):** scaffolded `review.yaml` (points at the dev server), ran it.
+DOM checks 8/8 PASS. The FAILs/warnings were all noise: content hits were 100% inside
+`.venv` third-party libs (the tool can't skip dot-dirs / recursive globs — flagged as a
+task), and the "overflow" FAILs are benign (sub-pixel text descenders + Plotly
+`cliponaxis=False` SVG labels; page does not horizontally scroll). `screenshots/` gitignored.
+
+**Design-system audit** (measured live computed styles vs LAILARA_DESIGN_SYSTEM.md at
+C:\Users\mssha\projects\reference\lailara-design-system\). Note the DS path in CLAUDE.md is
+stale — it's under `lailara-design-system/`, not the project reference root. **High
+conformance:** warm canvas #f5f3ee, 1200px centered container, 2px radius, perfect
+serif/sans boundary, palette-token colors (no ad-hoc hex), chart rules all pass.
+**Fixed (Leaky-Bucket-local):**
+- Six secondary-text colors were falling back to London-40 `#666` (undefined `--ll-reference`
+  alias) → now `var(--ll-london-35, #595959)`, the DS secondary-text color (also better
+  contrast).
+- Purpose hero 30px → **28px** (DS benchmark-value step; was off-scale).
+- Retention heatmap light anchor `#e4f5f0` (HK-95, DS: step-95 is surface-only) → **HK-85**
+  `#b5e4d8`, the lightest usable data stop, via a new `HK_85` token in constants.py.
+**Flagged as a separate task (series-level, not this tool):** the type-scale drift — view
+titles 26px (DS 22), stat numbers 30px (DS 28), verdict headline 40px (off-scale), wordmark
+22px (DS 26) — all inherited from the shared Decompose/Spin Rate template + vendored
+lailara-frame. Fixing here alone would desync the 5-tool series.
+
+**State:** 48 tests green, ruff clean. DS fixes verified in-browser (28px hero, #595959 text,
+heatmap anchor swapped, no overflow). Still not redeployed.
+
 ---
 
 ## 2026-07-06 — Project initialized
