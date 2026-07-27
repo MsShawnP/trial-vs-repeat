@@ -9,6 +9,52 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-27 — /improve pass: exec 30-second comprehension + independent review
+
+**Started from:** LIVE, stable. Shawn ran `/improve`. Two concerns: (1) can a CEO/CFO
+grasp the tool's purpose and read in 30 seconds; (2) is the Claude-authored code actually
+good / best-practice.
+
+**Log brought current:** 8 polish commits landed after the 2026-07-06 wrap and were never
+logged here — README, MIT license, repo cleanup, ag-grid stripe, retention-scale/border
+fixes, .gitattributes (CRLF), genuine 700/600 fonts (bold had been a byte-copy of 400),
+a11y `html lang`. Working tree was clean at session start.
+
+**Did (all verified in browser at 1440px + 375px, no console errors):**
+- **Purpose block (30s fix):** new hero line as the *first* content on the page, above the
+  tabs — "Of the households that tried this brand, how many came back?" + a stakes subline.
+  Previously the first things a cold exec read were a date and a synthetic-data disclaimer;
+  the actual purpose was buried in the footer + collapsed "Why this matters". `layout.py`
+  `_build_page_intro()` + `.page-intro*` CSS (responsive: 30px desktop / 24px mobile).
+- **Named the winner:** verdict headline was "One of these launches is a brand. The other
+  is a promotion." → now "The Snack Bites launch is a promotion. The Pantry Staples launch
+  is a real brand." Added a `line_name` column to `trial_repeat.item_verdict` (human
+  product-line name, not the SKU) and rewrote `verdict._headline_children` to name items.
+  +1 regression test (`test_headline_names_the_promotion_and_the_brand`).
+- **Independent review (2 background agents):**
+  - *Security:* **clean** — no secrets, no injection, no XSS, safe prod config. Only two
+    LOW container nits (gunicorn runs as root; base image floating tag).
+  - *Data/math:* **"Trustworthy for exec-facing numbers"** — maturity-cutoff/right-censoring
+    correct, centralized, consistently applied; both `tx.merge(mature…)` joins are
+    cardinality-safe (many-to-one); denominators correct. No calc/join/off-by-one errors.
+- **Review fixes folded in (copy only, no math):**
+  - *Finding 1:* the Cohort Retention triangle uses a different "repeat" definition than the
+    headline (quarter-grain, window-independent). Added an italic reconciliation note under
+    the triangle so a CFO doesn't think the 51% headline and the triangle should match.
+  - *Finding 2:* added a caption on the depth chart clarifying depth = distinct purchase
+    occasions (shopping trips), so "2×" isn't misread.
+
+**State:** 48 app tests green (was 47), ruff clean, working tree has the above changes
+(uncommitted at time of writing → committed this session). Dev-server verified. NOT yet
+redeployed to Fly.
+
+**Deferred (not done — Shawn's call):** security container nits (non-root user, pin base
+image by digest); data-review findings 3 (cosmetic: trial_reach shown next to n_mature —
+harmless with current data) and 4 (nit: heatmap formats NaN before masking). None block.
+**Redeploy** to pick up these UI changes when ready.
+
+---
+
 ## 2026-07-06 — Project initialized
 
 **Started from:** New project setup (`/new-project`). Tool #4 of 5 in the

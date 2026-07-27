@@ -136,3 +136,23 @@ here. Then start a new arc above.
 Track when this project was reviewed and improved via /improve.
 
 <!-- Entries are added by /improve — don't delete this section -->
+
+### 2026-07-27 — Improvement pass
+- **Trigger:** user-initiated (`/improve`). Concerns: (1) 30-second exec comprehension for
+  a CEO/CFO; (2) confidence the Claude-authored code is good / best-practice.
+- **What was reviewed:** all of `app/` (read every module), the live page top-to-bottom as
+  a cold exec, tests + ruff, and two independent background reviews (security; data/math
+  correctness).
+- **What was fixed:** added a purpose hero line as the first content on the page (30s fix);
+  named the promotion/brand in the verdict headline in product terms, not SKU (+`line_name`
+  column, +1 regression test); added a caption reconciling the cohort triangle's
+  quarter-grain retention with the windowed headline repeat rate (review finding 1); added a
+  depth-chart "shopping trips" caption (finding 2). 48 tests green, ruff clean, verified at
+  1440px + 375px.
+- **Verdict on the code:** independent review confirmed it — security clean; math
+  "trustworthy for exec-facing numbers" (maturity-cutoff logic correct/centralized, merges
+  cardinality-safe, denominators right). No calculation bugs.
+- **Deferred:** security container hardening (non-root user, pin base image by digest);
+  data-review findings 3 & 4 (cosmetic / NaN-format nit — harmless with current data);
+  redeploy to Fly to ship these UI changes.
+- **Next review:** 2026-10-27 (stable/shipped cadence — 90 days — unless it changes sooner).

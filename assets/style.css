@@ -438,6 +438,34 @@ html, body {
 
 /* ── Decompose shell (Slice 3) ─────────────────────────────────────── */
 
+/* Page intro — the tool's purpose in one line, above everything (30-second read) */
+.page-intro {
+    margin: 4px 0 22px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--ll-separator, #e0e0e0);
+}
+.page-intro-lead {
+    font-family: var(--ll-serif);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--ll-ink, #0d0d0d);
+    margin: 0 0 10px;
+    max-width: 22ch;
+}
+.page-intro-sub {
+    font-family: var(--ll-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ll-text, #333);
+    max-width: 66ch;
+    margin: 0;
+}
+@media (max-width: 640px) {
+    .page-intro-lead { font-size: 24px; max-width: none; }
+    .page-intro-sub { font-size: 15px; }
+}
+
 /* As-of date + synthetic-data disclosure row */
 .as-of-row {
     display: flex;
@@ -556,6 +584,14 @@ html, body {
     color: var(--ll-reference, #666);
     margin: 6px 0 18px;
     text-align: center;
+}
+/* A clarifying note under a chart (e.g. reconciling two 'repeat' definitions) */
+.chart-caption--note {
+    font-style: italic;
+    max-width: 68ch;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: -8px;
 }
 .why-details {
     border-top: 1px solid var(--ll-separator, #e0e0e0);

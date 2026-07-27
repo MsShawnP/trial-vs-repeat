@@ -54,6 +54,30 @@ def _build_content_area():
     )
 
 
+def _build_page_intro():
+    """The tool's purpose in one plain line — what it answers, before any chart.
+
+    A CEO/CFO landing cold should know what this tool is *for* within a few seconds,
+    without opening 'Why this matters' or reading the footer. This is the umbrella
+    question all three tabs serve.
+    """
+    return html.Div(
+        [
+            html.P(
+                "Of the households that tried this brand, how many came back?",
+                className="page-intro-lead",
+            ),
+            html.P(
+                "Repeat rate separates real adoption from expensive sampling — a brand "
+                "from a promotion. Household penetration can climb every quarter while "
+                "the bucket quietly leaks.",
+                className="page-intro-sub",
+            ),
+        ],
+        className="page-intro",
+    )
+
+
 def _build_as_of_note():
     """As-of date + synthetic-data disclosure (both required on an exec-facing page)."""
     as_of = panel_data.AS_OF_DATE.strftime("%b %d, %Y")
@@ -81,6 +105,7 @@ def register_layout():
             ),
             html.Div(
                 [
+                    _build_page_intro(),
                     _build_as_of_note(),
                     _build_tabs(),
                     build_filter_bar(),

@@ -86,14 +86,22 @@ def _headline_children(vf, window_weeks):
 
     if len(scored) == 0:
         lead = "No launch item matches this filter — clear the product line or retailer to compare."
+    elif len(brands) == 1 and len(promos) == 1:
+        # The hero case (whole-brand default): name which is which so a CFO reads the
+        # verdict at a glance, in product terms — not the internal SKU code.
+        lead = (f"The {promos.iloc[0]['line_name']} launch is a promotion. "
+                f"The {brands.iloc[0]['line_name']} launch is a real brand.")
     elif len(brands) and len(promos):
-        lead = "One of these launches is a brand. The other is a promotion."
-    elif len(brands) == len(scored):
-        lead = "These triers came back — this reads as a brand." if len(scored) == 1 \
-            else "Both launches kept their triers — both read as brands."
+        # More than two launch items (not in the current panel) — fall back to counts.
+        lead = "Some of these launches are brands; others are promotions."
+    elif len(promos) == 0:
+        lead = (f"The {brands.iloc[0]['line_name']} launch kept its triers — this reads as a brand."
+                if len(scored) == 1
+                else "Both launches kept their triers — both read as brands.")
     else:
-        lead = "These triers didn't come back — this reads as a promotion." if len(scored) == 1 \
-            else "Neither launch kept its triers — both read as promotions."
+        lead = (f"The {promos.iloc[0]['line_name']} launch didn't keep its triers — this reads as a promotion."
+                if len(scored) == 1
+                else "Neither launch kept its triers — both read as promotions.")
 
     return [
         html.Div(lead, className="verdict-figure"),

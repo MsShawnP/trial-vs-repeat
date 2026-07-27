@@ -48,6 +48,17 @@ def test_depth_chart_three_buckets():
     assert len(fig.data[0].x) == 3  # 1x / 2x / 3x+
 
 
+# ── The verdict headline names each launch in plain product terms ─
+def test_headline_names_the_promotion_and_the_brand():
+    # The default (whole-brand) view must name which launch is which — in product-line
+    # terms, not the internal SKU — so a CFO reads the verdict at a glance.
+    vf = panel_data.item_verdict(52, TH)
+    lead = verdict._headline_children(vf, 52)[0].children
+    assert "Snack Bites" in lead and "promotion" in lead      # the leaky launch
+    assert "Pantry Staples" in lead and "brand" in lead       # the sticky launch
+    assert "CHP-" not in lead                                  # no raw SKU codes in the headline
+
+
 # ── Every builder survives an empty slice (the cohort KeyError regression) ─
 def test_all_builders_survive_empty_slice():
     vf = panel_data.item_verdict(52, TH, product_line="AS")  # excludes both items

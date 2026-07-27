@@ -268,8 +268,11 @@ def item_verdict(window_weeks: int, threshold: float, product_line: str | None =
     A trial-heavy, repeat-light item (repeat below ``threshold``) reads as a promotion;
     at or above threshold it reads as a brand. When no mature triers exist for the item
     under the current filter, the verdict is "No data" (repeat_rate is not meaningful),
-    never a false "Promotion". Columns: sku_id, role, launch_label, n_triers,
+    never a false "Promotion". Columns: sku_id, role, line_name, launch_label, n_triers,
     trial_reach, n_mature, repeat_rate, verdict.
+
+    ``line_name`` is the human product-line name (e.g. "Snack Bites") so exec-facing
+    copy can name an item without exposing the internal SKU code.
     """
     rows = []
     for sku, cfg in panel.LAUNCH_ITEMS.items():
@@ -281,9 +284,11 @@ def item_verdict(window_weeks: int, threshold: float, product_line: str | None =
             verdict = VERDICT_BRAND
         else:
             verdict = VERDICT_PROMOTION
+        line_code = sku.split("-")[1]
         rows.append({
             "sku_id": sku,
             "role": cfg["role"],
+            "line_name": panel.PRODUCT_LINES[line_code]["name"],
             "launch_label": panel.QUARTERS.loc[cfg["launch_quarter_index"], "label"],
             "n_triers": summary["n_triers"],
             "trial_reach": summary["n_triers"] / N_HOUSEHOLDS,

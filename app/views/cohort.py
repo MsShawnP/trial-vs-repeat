@@ -51,7 +51,20 @@ def layout():
                 "right are quarters that haven't happened yet for recent cohorts.",
                 className="chart-caption",
             ),
+            html.P(
+                "Retention here is quarter-grain — the share of the cohort that bought "
+                "again in that quarter — and does not use the repeat-window setting. It "
+                "answers a different question than the repeat rate on the Trial vs "
+                "Repeat tab, so the two numbers are not meant to match.",
+                className="chart-caption chart-caption--note",
+            ),
             dcc.Graph(id="depth-chart", config=CHART_CONFIG, style={"minHeight": "340px"}),
+            html.P(
+                "Depth counts distinct purchase occasions (shopping trips) within the "
+                "window: 1× = trial only, 2× = came back once, 3×+ = twice or more. "
+                "Several units bought on the same day count as one trip.",
+                className="chart-caption",
+            ),
             html.P(id="depth-note", className="as-of"),
             why_this_matters(_WHY),
         ],
