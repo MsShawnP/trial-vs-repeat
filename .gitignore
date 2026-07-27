@@ -36,3 +36,6 @@ packages/**/*.egg-info/
 # Local build artifacts from pip install .
 /build/
 /*.egg-info/
+
+# ui-review-skill output (regenerated each run)
+/screenshots/

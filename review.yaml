@@ -1,0 +1,63 @@
+project: trial-vs-repeat
+
+# Points at the running dev server so the review covers the current build.
+# The live site (https://leakybucket.lailarallc.com) lags until the next deploy.
+# Override per-run with:  --base-url https://leakybucket.lailarallc.com
+base_url: http://localhost:8050
+
+routes:
+  # Single-page Dash app: one URL, three tabs toggled client-side. All three
+  # tab panels are pre-rendered into the DOM, so the DOM checks below can assert
+  # on elements from every tab at the default route.
+  - path: /
+    name: Leaky Bucket
+
+# NOTE ON CONTENT NOISE: the current ui-review-skill scans every served file
+# under the project root and does NOT skip dot-directories, and its glob matcher
+# does not support recursive excludes (e.g. ".venv/**" never matches). So an
+# in-tree Python .venv floods this section with third-party TODO/api_key hits.
+# Those are library internals, not our code — our source is scanned clean (and the
+# security-review skill already covers secrets properly). Only basename globs
+# like "*.md" actually exclude. Treat any ".venv/..." finding below as noise until
+# the tool learns to skip dot-dirs.
+forbidden_content:
+  - pattern: "TODO|FIXME|HACK|XXX"
+    severity: warning
+    reason: Dev markers in production code
+    exclude:
+      - "*.md"
+  - pattern: "password\\s*=|api_key\\s*=|secret\\s*="
+    severity: fail
+    reason: Possible hardcoded credentials
+    exclude:
+      - "*.md"
+
+dom_checks:
+  - route: /
+    elements:
+      - selector: .lailara-wordmark
+        label: Brand header present
+      - selector: .page-intro-lead
+        label: Purpose hero line present (the 30-second read)
+      - selector: .custom-tabs
+        label: Tab navigation present
+      - selector: .verdict-headline
+        label: Verdict headline container present
+      - selector: .synthetic-note
+        label: Synthetic-data disclosure visible
+      - selector: .chart-caption--note
+        label: Cohort reconciliation note present
+      - selector: .lailara-footer
+        label: Footer present
+    absent:
+      - selector: .dash-debug-error
+        label: No Dash callback error surfaced
+
+# The tool runs an always-on element-overflow scan (flags any element whose
+# scroll size exceeds its client size). On this Plotly page that surfaces two
+# BENIGN classes of finding, neither of which is a page-level horizontal scroll
+# (verified separately: documentElement.scrollWidth == clientWidth at 1440 & 375):
+#   - a few px of vertical overflow on text blocks (font-descender rounding), and
+#   - SVG <text> chart labels extending past their axis by design (cliponaxis=False,
+#     set so value labels are never clipped).
+# No explicit layout assertions are declared; the auto-scan is the coverage.
