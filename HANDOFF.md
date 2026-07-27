@@ -9,6 +9,24 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-27 16:30 — Session wrap
+
+**Started from:** Shipped + live; Shawn ran `/improve` (concerns: 30-second exec
+comprehension; is the code good).
+
+**Did:** Added a purpose hero + named the verdict; two independent reviews (both clean);
+ran ui-review + a Lailara design-system audit and fixed the local deviations; a spawned
+task reconciled the display type scale; **deployed to Fly and verified live**. Detail in
+the three dated sub-entries below.
+
+**State:** All work LIVE at https://leakybucket.lailarallc.com (/health 200). 48 tests
+green, ruff clean, working tree clean, HEAD `bfce9fe` → then this wrap commit.
+
+**Next:** (optional) fix the stale DS path in global CLAUDE.md; deferred security container
+nits + data-review findings 3/4; the ui-review `.venv` task may have landed in its own repo.
+
+---
+
 ## 2026-07-27 — /improve pass: exec 30-second comprehension + independent review
 
 **Started from:** LIVE, stable. Shawn ran `/improve`. Two concerns: (1) can a CEO/CFO

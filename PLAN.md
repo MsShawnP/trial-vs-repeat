@@ -152,7 +152,12 @@ Track when this project was reviewed and improved via /improve.
 - **Verdict on the code:** independent review confirmed it — security clean; math
   "trustworthy for exec-facing numbers" (maturity-cutoff logic correct/centralized, merges
   cardinality-safe, denominators right). No calculation bugs.
+- **Also this session:** ran the ui-review-skill (scaffolded `review.yaml`; 8/8 DOM pass;
+  FAILs were `.venv`/Plotly noise — tool bug flagged as a task); ran a Lailara design-system
+  audit (high conformance; fixed London-35 text, 28px hero, HK-85 heatmap anchor; flagged the
+  series type-scale drift, which a spawned task then reconciled in `1c79467`); **deployed to
+  Fly and verified live** at leakybucket.lailarallc.com (/health 200).
 - **Deferred:** security container hardening (non-root user, pin base image by digest);
-  data-review findings 3 & 4 (cosmetic / NaN-format nit — harmless with current data);
-  redeploy to Fly to ship these UI changes.
+  data-review findings 3 & 4 (cosmetic / NaN-format nit — harmless with current data); fix
+  the stale DS path in global CLAUDE.md.
 - **Next review:** 2026-10-27 (stable/shipped cadence — 90 days — unless it changes sooner).

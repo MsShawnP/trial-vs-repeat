@@ -82,6 +82,31 @@ Each entry:
 [Chart conventions inherited from Spin Rate / Void Finder shared template.
 Log per-project chart decisions here as they're made.]
 
+### 2026-07-27 — Cohort triangle retention is quarter-grain, distinct from the headline repeat rate
+- **Why:** The Cohort Retention triangle measures "share of the cohort that bought again in
+  a later *quarter*" — quarter-grain, no maturity cutoff, and *independent of the
+  repeat-window slider*. The headline / verdict / depth measure "repeat within W weeks,
+  mature triers only." The two answer different questions and will NOT match (e.g. sticky
+  item's 51% headline vs its per-quarter triangle cells). A data/math review flagged that
+  nothing on-screen reconciled them, so an in-app italic caption now states the difference.
+- **Scope:** `app/views/cohort.py` (triangle), `app/trial_repeat.cohort_retention`.
+- **Do not:** "fix" the triangle to respond to the repeat-window slider or to match the
+  headline repeat rate — that is not a bug. The divergence is intentional and captioned.
+
+### 2026-07-27 — Follow LAILARA_DESIGN_SYSTEM.md; local deviations fixed, type scale is series-level
+- **Why:** A design-system audit (measured live computed styles) confirmed high conformance.
+  Fixed three Leaky-Bucket-local deviations: secondary text → London-35 (`#595959`, was
+  London-40 `#666`); purpose hero → 28px (DS benchmark-value step); retention heatmap light
+  anchor → HK-85 `#b5e4d8` (DS reserves step 95 for surface fills, never data — added an
+  `HK_85` token to constants.py since lailara-palette doesn't export it). The remaining
+  type-scale drift lives in the shared template + vendored lailara-frame, so it was
+  reconciled series-wide (commit `1c79467`, lailara-frame v1.2.0), not patched here alone.
+- **Scope:** `assets/style.css`, `app/constants.py`, and (series) `assets/lailara-frame.css`.
+- **Do not:** hard-code serif sizes inline (use the `.ll-*` type-scale classes from
+  lailara-frame v1.2.0); use step-95 family fills as chart data; reintroduce London-40 for
+  text. The canonical DS file is at `reference/lailara-design-system/` (global CLAUDE.md's
+  path is stale).
+
 ---
 
 ## Output Formats
