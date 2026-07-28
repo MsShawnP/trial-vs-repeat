@@ -493,11 +493,9 @@ html, body {
 
 /* View heading + blurb */
 .view-heading { margin: 8px 0 20px; }
+/* Type comes from .ll-section-title (frame >= v1.2.0), applied alongside this
+   class in components.view_heading(). Only the non-type properties live here. */
 .view-title {
-    font-family: var(--ll-serif);
-    font-size: 22px;   /* DS section title (desktop); 18px mobile below */
-    font-weight: 700;
-    line-height: 1.3;
     color: var(--ll-ink, #0d0d0d);
     margin: 0 0 6px;
 }
@@ -512,7 +510,7 @@ html, body {
 
 /* Verdict headline (Which-Lever view — the one live output in Slice 3) */
 .verdict-headline {
-    background: #fff;
+    background: var(--ll-london-95);  /* London-95 — DS soft card surface */
     border: 1px solid var(--ll-separator, #e0e0e0);
     border-top: 4px solid var(--ll-chicago-20);
     border-radius: 2px;
@@ -639,7 +637,7 @@ html, body {
     margin-bottom: 8px;
 }
 .metric-card {
-    background: #fff;
+    background: var(--ll-london-95);  /* London-95 — DS soft card surface */
     border: 1px solid var(--ll-separator, #e0e0e0);
     border-top: 3px solid var(--ll-chicago-20);
     border-radius: 2px;
@@ -654,11 +652,9 @@ html, body {
     color: var(--ll-text-sec, #595959);
     margin-bottom: 8px;
 }
+/* Type comes from .ll-benchmark-value (frame >= v1.2.0), applied alongside this
+   class in components.metric_card(). Only the non-type properties live here. */
 .metric-card-value {
-    font-family: var(--ll-serif);
-    font-size: 28px;   /* DS benchmark value (desktop); 24px mobile below */
-    font-weight: 700;
-    line-height: 1.05;
     color: var(--ll-ink, #0d0d0d);
 }
 .metric-card-foot {
@@ -681,11 +677,12 @@ html, body {
 .metric-card-delta.delta-up { color: var(--ll-hk-25); }
 .metric-card-delta.delta-down { color: var(--ll-tokyo-40); }
 
-/* DS display type-scale — mobile steps (desktop values set on each rule above) */
+/* .view-title and .metric-card-value take their mobile steps from the frame's
+   .ll-section-title / .ll-benchmark-value. .verdict-figure still declares its
+   own — see the open item to move it off the 64px headline step onto
+   .hero-headline (44/30), which is the step that fits prose. */
 @media (max-width: 640px) {
-    .view-title { font-size: 18px; }
     .verdict-figure { font-size: 44px; }
-    .metric-card-value { font-size: 24px; }
 }
 
 .detail-subhead {
