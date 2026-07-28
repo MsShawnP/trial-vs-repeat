@@ -41,7 +41,7 @@ def view_heading(title: str, blurb: str):
     """A view's serif heading plus a one-line 'why this matters' blurb."""
     return html.Div(
         [
-            html.H2(title, className="view-title"),
+            html.H2(title, className="view-title ll-section-title"),
             html.P(blurb, className="view-blurb"),
         ],
         className="view-heading",
@@ -56,7 +56,7 @@ def metric_card(label, value, foot=None, delta=None, delta_class=None, tip=None)
     """
     children = [
         html.Div(label, className="metric-card-label"),
-        html.Div(value, className="metric-card-value"),
+        html.Div(value, className="metric-card-value ll-benchmark-value"),
     ]
     if delta is not None:
         children.append(html.Div(delta, className=f"metric-card-delta {delta_class or ''}".strip()))
