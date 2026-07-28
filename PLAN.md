@@ -161,3 +161,29 @@ Track when this project was reviewed and improved via /improve.
   data-review findings 3 & 4 (cosmetic / NaN-format nit — harmless with current data); fix
   the stale DS path in global CLAUDE.md.
 - **Next review:** 2026-10-27 (stable/shipped cadence — 90 days — unless it changes sooner).
+
+## Panel vendoring divergence (open)
+
+`cinderhaven-household-panel` is vendored separately by this repo and by
+Decompose, and the two copies have diverged. Decompose's `get_buyer_flow()`
+ends by scaling `PROJECTED_FLOW_COLUMNS` by the brand projection factor
+k (~166.5); this repo's copy has no `get_projection_factor` at all.
+
+- This repo: `metrics.py` md5 `db5a405`, 104 lines, raw panel counts, int64.
+- Decompose: `metrics.py` md5 `2c3037f`, 126 lines, projected, float64.
+
+`buyer_flow()` here recomputes from `panel.get_transactions()` (always raw), so
+running against the projected panel yields raw ints from this repo and
+projected floats from the package — a 166x value difference, not a dtype nit.
+`test_whole_brand_flow_mirrors_panel` is the only detector; it now fails with an
+explicit provenance message instead of a dtype error.
+
+Decision taken 2026-07-28: **pin to the unprojected panel.** It is what this
+repo's `.venv` already resolves to, what the deployed site runs, and what the
+pinned constants (176/1,234 triers, 14.26% repeat) assume. Verified passing
+under pandas 2.3.3/numpy 1.26 and pandas 3.0.2/numpy 2.4 against this repo's
+own copy.
+
+Open, not urgent: the Flow tab therefore shows panel-scale household counts
+while Decompose's shows brand-scale, and neither states which. Adopting the
+projected panel is a feature decision on a working tool, not a bug fix.

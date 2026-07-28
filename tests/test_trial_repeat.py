@@ -174,8 +174,28 @@ class TestBuyerFlowIdentities:
 
     def test_whole_brand_flow_mirrors_panel(self):
         import cinderhaven_household_panel as hp
+
+        # Panel provenance guard — read this before debugging a dtype error.
+        # trial-vs-repeat is pinned to the UNPROJECTED panel. buyer_flow()
+        # recomputes raw household counts from panel.get_transactions(), so it
+        # can only mirror a get_buyer_flow() that is also raw. Decompose's
+        # vendored copy of this same package scales these columns by the brand
+        # projection factor k (~166.5), which makes them float64 and 166x
+        # larger. Against that copy the comparison below fails for a reason
+        # that has nothing to do with this repo. See PLAN.md, "Panel vendoring
+        # divergence".
+        flow = hp.get_buyer_flow()
+        assert flow["prior_buyers"].dtype.kind == "i", (
+            "Wrong cinderhaven-household-panel on sys.path: get_buyer_flow() "
+            f"returned {flow['prior_buyers'].dtype} for prior_buyers, so the "
+            "brand-PROJECTED panel (Decompose's vendored copy) is installed. "
+            "trial-vs-repeat is pinned to the unprojected panel in "
+            "packages/cinderhaven-household-panel — install that one, or run "
+            "pytest with this repo's own .venv."
+        )
+
         ours = tr.buyer_flow().set_index("to_label")
-        theirs = hp.get_buyer_flow().set_index("to_label")
+        theirs = flow.set_index("to_label")
         for col in ("new", "retained", "lapsed", "prior_buyers", "current_buyers"):
             assert (ours[col] == theirs[col]).all(), f"{col} diverges from panel"
 
