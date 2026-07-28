@@ -128,7 +128,12 @@ def _build_triangle(ret):
                               font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
                    showgrid=False, showline=False, automargin=True, side="top",
                    tickfont=dict(family=FONT_SANS, size=12, color=TEXT_SECONDARY)),
-        yaxis=dict(autorange="reversed", showgrid=False, showline=False, automargin=True,
+        # Cohorts are panel households. Retention is a rate and so scale-invariant,
+        # but an unlabelled cohort axis leaves the reader no basis for the sizes
+        # behind it. Count derived, never hard-coded.
+        yaxis=dict(title=dict(text=f"First-purchase cohort (of {panel_data.N_HOUSEHOLDS:,} panel households)",
+                              font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
+                   autorange="reversed", showgrid=False, showline=False, automargin=True,
                    tickfont=dict(family=FONT_SANS, size=12, color=TEXT_SECONDARY)),
         showlegend=False,
         margin=dict(l=140, r=24, t=72, b=48),

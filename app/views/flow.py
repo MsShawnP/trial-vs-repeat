@@ -110,7 +110,10 @@ def _build_flow(flow):
         barmode="relative",
         uniformtext=dict(minsize=8, mode="hide"),
         yaxis=dict(
-            title=dict(text="Households (per quarter)",
+            # State the basis. These are panel-measured households, not projected
+            # to brand scale, so an unlabelled "Households" reads as a ~2,200-
+            # household brand. Count derived, never hard-coded.
+            title=dict(text=f"Panel households (per quarter, of {panel_data.N_HOUSEHOLDS:,})",
                        font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
             showgrid=True, gridcolor=GRIDLINE, showline=False, automargin=True,
             zeroline=True, zerolinecolor=REFERENCE, zerolinewidth=1.5,
@@ -146,7 +149,9 @@ def _build_trial_curve(curve):
         title=dict(text="Cumulative trial — first-ever buyers",
                    font=dict(family=FONT_SERIF, size=22, color=INK)),
         yaxis=dict(
-            title=dict(text="Households that have tried (share)",
+            # A share is scale-invariant, but its denominator is the panel, not
+            # the national household universe. Name the denominator.
+            title=dict(text=f"Share of {panel_data.N_HOUSEHOLDS:,} panel households that have tried",
                        font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
             showgrid=True, gridcolor=GRIDLINE, showline=False, automargin=True,
             tickformat=".0%", rangemode="tozero",

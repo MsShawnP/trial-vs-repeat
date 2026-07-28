@@ -219,10 +219,18 @@ def buyer_flow(product_line: str | None = None, retailer_id: str | None = None,
                sku: str | None = None) -> pd.DataFrame:
     """New / retained / lapsed buyer flow per adjacent quarter pair, for any scope.
 
-    For the whole brand (sku=None) this mirrors the panel's ``get_buyer_flow``; with a
-    sku it computes the same flow for that one item. Columns: from_index, from_label,
-    to_label, prior_buyers, current_buyers, retained, new, lapsed, net (= new − lapsed).
-    Identities hold every row (prior = retained + lapsed; current = retained + new).
+    Counts are PANEL-MEASURED households, not projected to brand scale. This used to
+    say it mirrors the panel's ``get_buyer_flow``; that stopped being true at panel
+    0.2.0, which multiplies its absolute counts by the locked projection factor k
+    (~166.5) while this function keeps the raw household counts. Both scales are
+    internally consistent -- this tool reports no absolute dollar figure anywhere, so
+    nothing here is brand-scale and there is nothing for these counts to disagree
+    with. See DECISIONS.md "Panel-measured households, not brand-scale".
+
+    With a sku it computes the same flow for that one item. Columns: from_index,
+    from_label, to_label, prior_buyers, current_buyers, retained, new, lapsed,
+    net (= new − lapsed). Identities hold every row (prior = retained + lapsed;
+    current = retained + new).
     """
     from cinderhaven_household_panel import get_quarters
 

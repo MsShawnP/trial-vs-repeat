@@ -9,7 +9,11 @@ requires-python = ">=3.11"
 dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
-    "cinderhaven-household-panel>=0.1.0",
+    # Upper bound is load-bearing, not caution. 0.2.0 multiplies its absolute
+    # household counts by the brand projection factor k (~166.5); this tool
+    # reports panel-measured households. See DECISIONS.md "Panel-measured
+    # households, not brand-scale".
+    "cinderhaven-household-panel>=0.1.0,<0.2.0",
     "lailara-palette>=2.1.0",     # vendored design tokens (packages/lailara-palette)
     "dash>=3.0",
     "plotly>=6.0",

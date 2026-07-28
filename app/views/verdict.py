@@ -191,7 +191,13 @@ def _build_scatter(vf):
             font=dict(family=FONT_SERIF, size=22, color=INK),
         ),
         xaxis=dict(
-            title=dict(text="Trial reach (share of households)",
+            # Same panel-basis disclosure as the Flow and Cohort axes. This one is
+            # on the lead tab, so leaving it as a bare "share of households" would
+            # be the first number a CFO reads and the only unlabelled one.
+            # Wrapped: as one line this overflows the plot by ~166px at 375px.
+            # The other three basis labels are y-axis titles, which rotate and so
+            # have the plot's height to work with; this is the only x-axis one.
+            title=dict(text=f"Trial reach<br>(share of {panel_data.N_HOUSEHOLDS:,} panel households)",
                        font=dict(family=FONT_SANS, size=14, color=TEXT_SECONDARY)),
             showgrid=False, showline=True, linecolor=REFERENCE, automargin=True,
             tickformat=".0%", range=[0, x_max * 1.35 if x_max else 0.3],

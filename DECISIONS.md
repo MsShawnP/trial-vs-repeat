@@ -77,6 +77,51 @@ Each entry:
   and seed-locked. If Shawn wants the brief's 8/12 default, it's a one-constant change
   here; the sticky>leaky contrast holds at every window regardless.
 
+### 2026-07-28 — Panel-measured households, not brand-scale
+- **Decision:** This tool reports **panel-measured** household counts. It does not
+  apply the panel's brand projection factor k (~166.5). Ratified after the fact —
+  the choice was made implicitly and is written down here so it stops being
+  accidental.
+- **Why it's a choice and not a defect:** the tool displays **no absolute dollar
+  figure anywhere** — zero literal `$` in `app/views/` or `app/layout.py`. Nothing
+  in it is brand-scale, so there is no sibling view for panel-scale counts to be
+  inconsistent with. Both scales are internally consistent; the numbers are not
+  wrong under either. Adopting k would be porting a feature (this repo's pinned
+  panel has no `get_projection_factor` at all) and would shift the Flow tab, the
+  cohort triangle, and the trial curve — not a one-line change, and not one to
+  make without a rendered review.
+- **Root cause of the confusion:** panel **0.2.0 changed the meaning of its output**
+  — `get_buyer_flow()` and the period metrics began multiplying absolute counts by
+  k — and shipped that as a **minor** bump. The API signature did not move, so
+  nothing flagged it. `test_whole_brand_flow_mirrors_panel` was the only detector,
+  and it failed or passed purely on which vendored copy `sys.path` resolved, which
+  is why it read as intermittent and went four cycles without diagnosis.
+- **Versioning policy this implies:** for `cinderhaven-household-panel`, a change to
+  **what the numbers mean** is a **major** version, regardless of whether the API
+  signature changed. Output scale is part of the contract.
+- **Scope:** `pyproject.toml` now pins `>=0.1.0,<0.2.0` — the upper bound is
+  load-bearing, not caution. `trial_repeat.buyer_flow()` docstring no longer claims
+  to mirror the panel's `get_buyer_flow()`. `test_whole_brand_flow_mirrors_panel`
+  became `test_whole_brand_flow_matches_the_panel_transactions`, deriving its
+  expectation from `get_transactions()` (never projected under either version) so it
+  passes against both — verified against 0.1.0 and 0.2.0. Added
+  `test_whole_brand_flow_is_panel_measured_not_brand_scale` to guard this entry.
+- **Also fixed, and the more user-visible half:** panel-scale is defensible;
+  *unlabelled* panel-scale is not. A reader seeing ~2,200 "Households" for a $25M
+  brand either misreads the brand as tiny or cannot interpret it. Unlike Decompose,
+  this tool has no glossary line disclosing the panel basis. Three axis labels now
+  state it (`flow.py` ×2, `cohort.py` ×1), deriving the count from
+  `panel_data.N_HOUSEHOLDS` rather than hard-coding it.
+- **Do not:** "fix" the counts by multiplying by k without a rendered review of all
+  three charts and Shawn's sign-off — it is a 166x move on a live CFO-facing tool.
+- **Known and deliberately not solved here:** there is no canonical
+  `cinderhaven-household-panel` repo. It exists as two vendored copies at two
+  versions, which is why 0.1.0 and 0.2.0 are both "current". Same vendoring problem
+  as `lailara-frame`'s copies; belongs in that later pass. See PLAN.md "Panel
+  vendoring divergence".
+
+---
+
 ## Visualization
 
 [Chart conventions inherited from Spin Rate / Void Finder shared template.

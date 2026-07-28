@@ -172,32 +172,73 @@ class TestBuyerFlowIdentities:
     def test_item_flow_identities(self):
         self._check(tr.buyer_flow(sku=LEAKY))
 
-    def test_whole_brand_flow_mirrors_panel(self):
+    def test_whole_brand_flow_matches_the_panel_transactions(self):
+        """Whole-brand flow reproduces the panel's own household universe.
+
+        This asserted equality with the panel's ``get_buyer_flow()`` until
+        2026-07-28. That premise broke at panel 0.2.0, which scales
+        PROJECTED_FLOW_COLUMNS by the brand factor k (~166.5) while this app
+        reports panel-measured households — so the old assertion compared two
+        different scales and passed or failed purely on which vendored copy got
+        resolved. A provenance guard made that failure legible; deriving the
+        expectation from raw data removes it instead.
+
+        ``get_transactions()`` is never projected, under either panel version, so
+        this is version-independent by construction. See PLAN.md "Panel vendoring
+        divergence" and DECISIONS.md "Panel-measured households, not brand-scale".
+        """
         import cinderhaven_household_panel as hp
 
-        # Panel provenance guard — read this before debugging a dtype error.
-        # trial-vs-repeat is pinned to the UNPROJECTED panel. buyer_flow()
-        # recomputes raw household counts from panel.get_transactions(), so it
-        # can only mirror a get_buyer_flow() that is also raw. Decompose's
-        # vendored copy of this same package scales these columns by the brand
-        # projection factor k (~166.5), which makes them float64 and 166x
-        # larger. Against that copy the comparison below fails for a reason
-        # that has nothing to do with this repo. See PLAN.md, "Panel vendoring
-        # divergence".
-        flow = hp.get_buyer_flow()
-        assert flow["prior_buyers"].dtype.kind == "i", (
-            "Wrong cinderhaven-household-panel on sys.path: get_buyer_flow() "
-            f"returned {flow['prior_buyers'].dtype} for prior_buyers, so the "
-            "brand-PROJECTED panel (Decompose's vendored copy) is installed. "
-            "trial-vs-repeat is pinned to the unprojected panel in "
-            "packages/cinderhaven-household-panel — install that one, or run "
-            "pytest with this repo's own .venv."
-        )
+        tx = hp.get_transactions()
+        quarters = hp.get_quarters()[["quarter_index", "label"]].sort_values("quarter_index")
+        buyers = {qi: set(g["household_id"].unique()) for qi, g in tx.groupby("quarter_index")}
+        labels = dict(zip(quarters["quarter_index"], quarters["label"]))
+        indices = quarters["quarter_index"].tolist()
+
+        expected = {}
+        for prev, curr in zip(indices[:-1], indices[1:]):
+            prior, current = buyers.get(prev, set()), buyers.get(curr, set())
+            expected[labels[curr]] = {
+                "prior_buyers": len(prior),
+                "current_buyers": len(current),
+                "retained": len(prior & current),
+                "new": len(current - prior),
+                "lapsed": len(prior - current),
+            }
 
         ours = tr.buyer_flow().set_index("to_label")
-        theirs = flow.set_index("to_label")
-        for col in ("new", "retained", "lapsed", "prior_buyers", "current_buyers"):
-            assert (ours[col] == theirs[col]).all(), f"{col} diverges from panel"
+        assert list(ours.index) == list(expected), "quarter pairs diverge from the panel"
+
+        for label, exp in expected.items():
+            # The identities must hold on the panel-derived figures too, or the
+            # expectation is itself malformed and proves nothing.
+            assert exp["retained"] + exp["lapsed"] == exp["prior_buyers"]
+            assert exp["retained"] + exp["new"] == exp["current_buyers"]
+            for col, want in exp.items():
+                got = ours.loc[label, col]
+                assert got == want, (
+                    f"{col} at {label}: app has {got}, panel transactions give {want}"
+                )
+
+    def test_whole_brand_flow_is_panel_measured_not_brand_scale(self):
+        """Counts stay raw households and are never multiplied by the factor k.
+
+        Guards the decision in DECISIONS.md rather than a dtype: a count above the
+        panel universe means brand-scale projection has leaked into a figure the
+        Flow tab labels as panel households.
+        """
+        from cinderhaven_household_panel import N_HOUSEHOLDS
+
+        flow = tr.buyer_flow()
+        for col in ("prior_buyers", "current_buyers", "retained", "new", "lapsed"):
+            assert flow[col].dtype.kind == "i", (
+                f"{col} is {flow[col].dtype}, not an integer household count — "
+                "the brand-projected panel has leaked in"
+            )
+            assert flow[col].max() <= N_HOUSEHOLDS, (
+                f"{col} peaks at {flow[col].max()}, above the {N_HOUSEHOLDS}-household "
+                "panel universe — brand-scale projection has leaked in"
+            )
 
 
 # ── The empty-slice verdict must be "No data", never a false "Promotion" ─
