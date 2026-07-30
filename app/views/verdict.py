@@ -100,9 +100,8 @@ def _headline_children(vf, window_weeks, line=None, retailer=None):
     elif len(brands) == 1 and len(promos) == 1:
         # The hero case (whole-brand default): name which is which so a CFO reads the
         # verdict at a glance, in product terms — not the internal SKU code.
-        lead = (f"The {promos.iloc[0]['line_name']} launch is a promotion — "
-                f"{fmt_money(burn_total)} of trade support bought sampling that "
-                f"didn't stick. The {brands.iloc[0]['line_name']} launch is a real brand.")
+        lead = (f"The {promos.iloc[0]['line_name']} launch is a promotion. "
+                f"The {brands.iloc[0]['line_name']} launch is a real brand.")
     elif len(brands) and len(promos):
         # More than two launch items (not in the current panel) — fall back to counts.
         lead = "Some of these launches are brands; others are promotions."
@@ -111,14 +110,25 @@ def _headline_children(vf, window_weeks, line=None, retailer=None):
                 if len(scored) == 1
                 else "Both launches kept their triers — both read as brands.")
     else:
-        lead = (f"The {promos.iloc[0]['line_name']} launch didn't keep its triers — a promotion, "
-                f"with {fmt_money(burn_total)} of trade support behind failed trials."
+        lead = (f"The {promos.iloc[0]['line_name']} launch didn't keep its triers — this reads as a promotion."
                 if len(scored) == 1
-                else f"Neither launch kept its triers — both read as promotions, with "
-                f"{fmt_money(burn_total)} of trade support behind failed trials.")
+                else "Neither launch kept its triers — both read as promotions.")
+
+    standfirst = (
+        html.P(
+            [
+                html.B(fmt_money(burn_total)),
+                " of trade support bought sampling that didn't stick.",
+            ],
+            className="verdict-standfirst",
+        )
+        if len(promos) and burn_total > 0
+        else None
+    )
 
     return [
         html.Div(lead, className="verdict-figure"),
+        *( [standfirst] if standfirst is not None else [] ),
         html.P(
             f"Repeat measured within {window_weeks} weeks of first purchase. "
             "A trial-heavy, repeat-light item is expensive sampling, not adoption."
