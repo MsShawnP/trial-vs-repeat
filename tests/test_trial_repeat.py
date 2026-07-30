@@ -270,3 +270,24 @@ class TestFilterPath:
         rid = next(iter(hp.RETAILERS))
         scoped = tr.repeat_summary(52, retailer_id=rid)["n_triers"]
         assert 0 < scoped < brand
+
+
+# ── Failed-trial trade burn (P2-5 dollarization) ─────────────────────
+def test_failed_trial_burn_ties_to_depth_and_maturity():
+    from app import trial_repeat as tr
+
+    for sku in ("CHP-SB-010", "CHP-PS-010"):
+        summary = tr.repeat_summary(12, sku=sku)
+        burn = tr.failed_trial_burn(12, sku=sku)
+        # failed = mature minus repeaters, exactly
+        assert burn["n_failed"] == summary["n_mature"] - summary["n_repeaters"]
+        # burn is the assumed depth applied to failed first-purchase spend
+        assert burn["burn"] == burn["failed_trial_spend"] * tr.TRIAL_PROMO_DEPTH
+        assert burn["failed_trial_spend"] > 0
+
+
+def test_failed_trial_burn_empty_slice_is_zero():
+    from app import trial_repeat as tr
+
+    out = tr.failed_trial_burn(12, product_line="AS", sku="CHP-SB-010")
+    assert out == {"n_failed": 0, "failed_trial_spend": 0.0, "burn": 0.0}

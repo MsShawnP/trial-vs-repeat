@@ -142,6 +142,55 @@ def repeat_summary(window_weeks: int, product_line: str | None = None,
     }
 
 
+# ── Failed-trial trade burn (the dollar behind the verdict) ──────────
+# Owner-blessed assumption (2026-07-30): trial volume moves on promotion, and
+# Cinderhaven promotions run ~18% average depth off retail (measured from the
+# platform's promotions data; on the brand's ~$8.07 average unit that is ~$1.45
+# of trade support per trial unit). The burn applies that depth to the actual
+# first-purchase spend of mature triers who never repeated: trade dollars that
+# bought sampling, not adoption. Panel-measured — never projected to a household
+# universe (canonical: households carry no proxies).
+# Copy-only context (never computed from): industry trade spend runs 15-25% of
+# gross revenue, and ~72% of US trade promotions fail to break even.
+TRIAL_PROMO_DEPTH = 0.18
+
+
+def failed_trial_burn(window_weeks: int, product_line: str | None = None,
+                      retailer_id: str | None = None, sku: str | None = None) -> dict:
+    """Trade dollars burned on triers who never came back, for one filter slice.
+
+    Basis: ``TRIAL_PROMO_DEPTH`` (assumed 18% promo depth) x the first-purchase
+    spend of mature triers with no repeat within ``window_weeks``. Period: the
+    panel history through the as-of date, maturity cutoff applied (same rule as
+    ``repeat_summary``). Returns n_failed, failed_trial_spend, burn — all
+    in-panel dollars (5,000-household panel), never universe-projected.
+    """
+    tx = _tx(product_line, retailer_id, sku)
+    fp = (
+        tx.sort_values("date", kind="stable")
+        .drop_duplicates("household_id", keep="first")
+        .loc[:, ["household_id", "date", "spend"]]
+        .rename(columns={"date": "first_date", "spend": "first_spend"})
+        .reset_index(drop=True)
+    )
+    win = _window(window_weeks)
+    mature = fp[fp["first_date"] + win <= AS_OF]
+    if not len(mature):
+        return {"n_failed": 0, "failed_trial_spend": 0.0, "burn": 0.0}
+    joined = tx.merge(mature[["household_id", "first_date"]], on="household_id")
+    in_window = (joined["date"] > joined["first_date"]) & (
+        joined["date"] <= joined["first_date"] + win
+    )
+    repeated = joined.assign(is_repeat=in_window).groupby("household_id")["is_repeat"].any()
+    failed = mature[mature["household_id"].isin(repeated[~repeated].index)]
+    spend = float(failed["first_spend"].sum())
+    return {
+        "n_failed": int(len(failed)),
+        "failed_trial_spend": spend,
+        "burn": spend * TRIAL_PROMO_DEPTH,
+    }
+
+
 # ── Cohort retention triangle ─────────────────────────────────────────
 def cohort_retention(product_line: str | None = None, retailer_id: str | None = None,
                      sku: str | None = None) -> pd.DataFrame:

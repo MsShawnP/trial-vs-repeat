@@ -146,6 +146,13 @@ def depth_of_repeat(window_weeks: int, product_line: str | None = None,
                                         _normalize(retailer_id), sku)
 
 
+def failed_trial_burn(window_weeks: int, product_line: str | None = None,
+                      retailer_id: str | None = None, sku: str | None = None) -> dict:
+    """Trade burn on non-repeating mature triers (in-panel dollars, 18% assumed depth)."""
+    return trial_repeat.failed_trial_burn(window_weeks, _normalize(product_line),
+                                          _normalize(retailer_id), sku)
+
+
 def item_verdict(window_weeks: int, threshold: float, product_line: str | None = None,
                  retailer_id: str | None = None) -> pd.DataFrame:
     """Per-launch-item trial reach, repeat rate, and promotion/brand verdict."""

@@ -74,6 +74,13 @@ def fmt_pct(value, decimals=1):
     return f"{value * 100:.{decimals}f}%"
 
 
+def fmt_money(value):
+    """Format dollars with thousands separators, no cents ('$1,222')."""
+    if _is_missing(value):
+        return "N/A"
+    return f"${value:,.0f}"
+
+
 def fmt_number(value):
     """Format a count with thousands separators."""
     if _is_missing(value):

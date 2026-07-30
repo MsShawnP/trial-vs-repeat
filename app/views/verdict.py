@@ -29,6 +29,7 @@ from app.constants import (
     VERDICT_BRAND,
     VERDICT_NO_DATA,
     VERDICT_PROMOTION,
+    fmt_money,
     fmt_number,
     fmt_pct,
 )
@@ -45,7 +46,10 @@ _WHY = (
     "new buyers pour in and almost none repeat, growth is a treadmill that collapses "
     "the moment acquisition spend stops. Repeat rate is the difference between a brand "
     "and a promotion — and it's how a launch that looked great in month one gets "
-    "discontinued after a 'successful' year."
+    "discontinued after a 'successful' year. Industry context: trade spend runs "
+    "15–25% of gross revenue in food, and roughly 72% of US trade promotions "
+    "fail to break even — sampling that doesn't stick is the default, not the "
+    "exception."
 )
 
 
@@ -74,23 +78,31 @@ def layout():
     )
 
 
-def _headline_children(vf, window_weeks):
+def _headline_children(vf, window_weeks, line=None, retailer=None):
     """A plain-language verdict a CFO can't misread, built from the items with data.
 
     Items excluded by the current filter (verdict 'No data') are set aside — an empty
-    slice must never read as a failed launch.
+    slice must never read as a failed launch. Promotions carry their dollar: the
+    trade-support burn on triers who never came back (in-panel, 18% assumed depth).
     """
     scored = vf[vf["verdict"] != tr.VERDICT_NO_DATA]
     brands = scored[scored["verdict"] == tr.VERDICT_BRAND]
     promos = scored[scored["verdict"] == tr.VERDICT_PROMOTION]
+
+    # The dollar behind the verdict: burn summed over the promotion items.
+    burns = [panel_data.failed_trial_burn(window_weeks, line, retailer, sku=r.sku_id)
+             for r in promos.itertuples(index=False)]
+    burn_total = sum(b["burn"] for b in burns)
+    n_failed = sum(b["n_failed"] for b in burns)
 
     if len(scored) == 0:
         lead = "No launch item matches this filter — clear the product line or retailer to compare."
     elif len(brands) == 1 and len(promos) == 1:
         # The hero case (whole-brand default): name which is which so a CFO reads the
         # verdict at a glance, in product terms — not the internal SKU code.
-        lead = (f"The {promos.iloc[0]['line_name']} launch is a promotion. "
-                f"The {brands.iloc[0]['line_name']} launch is a real brand.")
+        lead = (f"The {promos.iloc[0]['line_name']} launch is a promotion — "
+                f"{fmt_money(burn_total)} of trade support bought sampling that "
+                f"didn't stick. The {brands.iloc[0]['line_name']} launch is a real brand.")
     elif len(brands) and len(promos):
         # More than two launch items (not in the current panel) — fall back to counts.
         lead = "Some of these launches are brands; others are promotions."
@@ -99,15 +111,23 @@ def _headline_children(vf, window_weeks):
                 if len(scored) == 1
                 else "Both launches kept their triers — both read as brands.")
     else:
-        lead = (f"The {promos.iloc[0]['line_name']} launch didn't keep its triers — this reads as a promotion."
+        lead = (f"The {promos.iloc[0]['line_name']} launch didn't keep its triers — a promotion, "
+                f"with {fmt_money(burn_total)} of trade support behind failed trials."
                 if len(scored) == 1
-                else "Neither launch kept its triers — both read as promotions.")
+                else f"Neither launch kept its triers — both read as promotions, with "
+                f"{fmt_money(burn_total)} of trade support behind failed trials.")
 
     return [
         html.Div(lead, className="verdict-figure"),
         html.P(
             f"Repeat measured within {window_weeks} weeks of first purchase. "
-            "A trial-heavy, repeat-light item is expensive sampling, not adoption.",
+            "A trial-heavy, repeat-light item is expensive sampling, not adoption."
+            + (
+                f" Trade burn: assumed {fmt_pct(tr.TRIAL_PROMO_DEPTH, 0)} promo depth "
+                f"on the first-purchase spend of {fmt_number(n_failed)} mature triers "
+                "who never repeated — panel dollars, not universe-projected."
+                if n_failed else ""
+            ),
             className="verdict-sentence",
         ),
     ]
@@ -245,7 +265,7 @@ def register_callbacks():
             cutoff = (f"Repeat window: {window} weeks. {fmt_number(immature)} recent trier(s) "
                       "are still within their window and excluded (maturity cutoff).")
         return (
-            _headline_children(vf, window),
+            _headline_children(vf, window, line, retailer),
             _cards(vf, window),
             _build_scatter(vf),
             cutoff,
