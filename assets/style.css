@@ -278,7 +278,7 @@
 }
 
 .narrative-content {
-    max-width: 660px;
+    max-width: var(--ll-body-max-width, 720px);
 }
 
 .narrative-title {
@@ -298,7 +298,7 @@
     color: var(--ll-london-20);
     line-height: 1.6;
     margin: 0 0 12px 0;
-    max-width: 660px;
+    max-width: var(--ll-body-max-width, 720px);
 }
 
 .narrative-protagonist {
@@ -451,14 +451,14 @@ html, body {
     line-height: 1.15;
     color: var(--ll-ink, #0d0d0d);
     margin: 0 0 10px;
-    max-width: 22ch;
+    max-width: var(--ll-display-max-width, 18em);
 }
 .page-intro-sub {
     font-family: var(--ll-sans);
     font-size: 16px;
     line-height: 1.55;
     color: var(--ll-text, #333);
-    max-width: 66ch;
+    max-width: var(--ll-body-max-width, 720px);
     margin: 0;
 }
 @media (max-width: 640px) {
@@ -504,7 +504,7 @@ html, body {
     font-size: 15px;
     line-height: 1.5;
     color: var(--ll-text, #333);
-    max-width: 60ch;
+    max-width: var(--ll-body-max-width, 720px);
     margin: 0;
 }
 
@@ -550,7 +550,7 @@ html, body {
     line-height: 1.5;
     color: var(--ll-text, #333);
     margin: 14px 0 0;
-    max-width: 62ch;
+    max-width: var(--ll-body-max-width, 720px);
 }
 
 /* Slice 4 placeholders */
@@ -574,7 +574,7 @@ html, body {
     font-size: 14px;
     line-height: 1.5;
     color: var(--ll-london-35, #595959);
-    max-width: 54ch;
+    max-width: var(--ll-body-max-width, 720px);
     margin: 0 auto 10px;
 }
 .placeholder-tag {
@@ -598,7 +598,7 @@ html, body {
 /* A clarifying note under a chart (e.g. reconciling two 'repeat' definitions) */
 .chart-caption--note {
     font-style: italic;
-    max-width: 68ch;
+    max-width: var(--ll-body-max-width, 720px);
     margin-left: auto;
     margin-right: auto;
     margin-top: -8px;
@@ -626,7 +626,7 @@ html, body {
     font-size: 14px;
     line-height: 1.55;
     color: var(--ll-text, #333);
-    max-width: 64ch;
+    max-width: var(--ll-body-max-width, 720px);
     margin: 10px 0 0;
 }
 
@@ -734,5 +734,5 @@ html, body {
     line-height: 1.5;
     color: var(--ll-text, #333);
     margin: 2px 0 0;
-    max-width: 66ch;
+    max-width: var(--ll-body-max-width, 720px);
 }
