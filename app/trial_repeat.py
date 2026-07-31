@@ -271,7 +271,7 @@ def buyer_flow(product_line: str | None = None, retailer_id: str | None = None,
     Counts are PANEL-MEASURED households, not projected to brand scale. This used to
     say it mirrors the panel's ``get_buyer_flow``; that stopped being true at panel
     0.2.0, which multiplies its absolute counts by the locked projection factor k
-    (~166.5) while this function keeps the raw household counts. Both scales are
+    (~164.07) while this function keeps the raw household counts. Both scales are
     internally consistent -- this tool reports no absolute dollar figure anywhere, so
     nothing here is brand-scale and there is nothing for these counts to disagree
     with. See DECISIONS.md "Panel-measured households, not brand-scale".

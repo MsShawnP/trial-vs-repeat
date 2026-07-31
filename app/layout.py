@@ -89,6 +89,11 @@ def _build_as_of_note():
                 "real brand.",
                 className="synthetic-note",
             ),
+            html.Span(
+                "Household counts are a synthetic panel overlay — the warehouse "
+                "carries neither households nor a projection factor.",
+                className="synthetic-note",
+            ),
         ],
         className="as-of-row",
     )
