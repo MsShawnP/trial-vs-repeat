@@ -177,7 +177,7 @@ class TestBuyerFlowIdentities:
 
         This asserted equality with the panel's ``get_buyer_flow()`` until
         2026-07-28. That premise broke at panel 0.2.0, which scales
-        PROJECTED_FLOW_COLUMNS by the brand factor k (~166.5) while this app
+        PROJECTED_FLOW_COLUMNS by the brand factor k (~164.07) while this app
         reports panel-measured households — so the old assertion compared two
         different scales and passed or failed purely on which vendored copy got
         resolved. A provenance guard made that failure legible; deriving the

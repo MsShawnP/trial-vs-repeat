@@ -10,7 +10,7 @@ dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
     # Upper bound is load-bearing, not caution. 0.2.0 multiplies its absolute
-    # household counts by the brand projection factor k (~166.5); this tool
+    # household counts by the brand projection factor k (~164.07); this tool
     # reports panel-measured households. See DECISIONS.md "Panel-measured
     # households, not brand-scale".
     "cinderhaven-household-panel>=0.1.0,<0.2.0",
