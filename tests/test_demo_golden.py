@@ -10,23 +10,16 @@ one day outside the window does NOT count).
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "app"))
-
 pytest.importorskip("lailara_engagement")
 
-from client_mode import compute_trial_repeat  # noqa: E402
+from client_mode import compute_trial_repeat  # noqa: E402  (repo root on path via cwd)
 
 
 def test_client_compute_matches_engine_on_demo_panel():
-    from trial_repeat import AS_OF, repeat_summary  # app engine
+    from app.trial_repeat import AS_OF, repeat_summary  # app engine (package import)
     import cinderhaven_household_panel as panel
 
     eng = repeat_summary(window_weeks=12)
