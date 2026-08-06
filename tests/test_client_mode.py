@@ -63,6 +63,25 @@ def test_deliverable_states_right_censoring_and_draft(tmp_path):
     assert "DRAFT" in html
 
 
+def test_repeat_window_and_cutoff_track_config_not_hardcoded(tmp_path):
+    """The rendered repeat window ('within N weeks', 'N-week window') and the
+    maturity cutoff date must come from basis.repeat_window_weeks, not a
+    hardcoded 12. The deliverable test asserts only the demo's own 'within 12
+    weeks' / '2025-11-08' — a positive-only check a hardcoded 12 would also
+    pass, the gap that let trade-spend quote 26 weeks as 'trailing 52 weeks'.
+
+    Both halves: feed a distinctive window and assert the label + cutoff track
+    it (cutoff = as_of − 8w = 2025-12-06), AND assert the demo default is absent."""
+    inp = _write(tmp_path)
+    res = client_mode.run(str(_cfg(tmp_path, window=8)), str(inp), str(tmp_path / "out"))
+    assert res["status"] == "ok"
+    html = Path(res["report"]).read_text(encoding="utf-8")
+    assert "within 8 weeks" in html and "8-week window" in html
+    assert "2025-12-06" in html                       # cutoff tracks the 8-week window
+    assert "within 12 weeks" not in html              # demo default must not survive
+    assert "12-week window" not in html and "2025-11-08" not in html
+
+
 def test_missing_purchase_date_blocks(tmp_path):
     import pandas as pd
     inp = tmp_path / "transactions.csv"
