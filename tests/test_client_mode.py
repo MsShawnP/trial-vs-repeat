@@ -98,3 +98,45 @@ def test_header_mapping(tmp_path):
     res = client_mode.run(str(cfg), str(inp), str(tmp_path / "out"))
     assert res["status"] == "ok"
     assert res["n_triers"] == 2
+
+
+# --- Engine-fidelity lock (moved here from the demo golden, 2026-08-05) ------------
+# These pin that the client-mode compute reproduces the tested engine — inherently
+# lib-dependent, so they belong in the client-mode suite, not the credential-free
+# demo golden.
+
+def test_client_compute_matches_engine_on_demo_panel():
+    """client-mode compute_trial_repeat reproduces the engine's demo repeat numbers."""
+    from app.trial_repeat import AS_OF, repeat_summary
+    import cinderhaven_household_panel as panel
+    from client_mode import compute_trial_repeat
+
+    eng = repeat_summary(window_weeks=12)
+    tx = panel.get_transactions().rename(columns={"date": "purchase_date"})
+    mine = compute_trial_repeat(tx, 12, AS_OF)
+    assert mine["n_mature"] == eng["n_mature"] == 4456
+    assert mine["n_repeaters"] == eng["n_repeaters"] == 2188
+    assert round(mine["repeat_rate"], 4) == round(eng["repeat_rate"], 4) == 0.491
+
+
+def test_maturity_boundary_fixture():
+    # as_of 2026-01-31, window 12w (84 days) -> maturity cutoff 2025-11-08.
+    import pandas as pd
+    from client_mode import compute_trial_repeat
+
+    as_of = pd.Timestamp("2026-01-31")
+    tx = pd.DataFrame([
+        ("H1", "2025-06-01"), ("H1", "2025-07-01"),   # repeat in window -> repeater
+        ("H2", "2025-06-15"),                          # no repeat -> non-repeater
+        ("H3", "2025-08-01"), ("H3", "2025-09-01"),   # repeat in window -> repeater
+        ("H4", "2026-01-15"),                          # immature (first purchase after cutoff)
+        ("H5", "2025-07-01"), ("H5", "2025-12-01"),   # repeat OUTSIDE the 84-day window -> non-repeater
+    ], columns=["household_id", "purchase_date"])
+    tx["purchase_date"] = pd.to_datetime(tx["purchase_date"])
+    r = compute_trial_repeat(tx, 12, as_of)
+    assert r["n_triers"] == 5
+    assert r["n_mature"] == 4          # H1,H2,H3,H5 mature; H4 immature
+    assert r["n_immature"] == 1
+    assert r["n_repeaters"] == 2       # H1,H3 (H5's repeat is out of window)
+    assert r["repeat_rate"] == 0.5
+    assert r["maturity_cutoff_date"] == "2025-11-08"

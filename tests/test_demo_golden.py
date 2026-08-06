@@ -1,50 +1,26 @@
-"""Demo golden + engine-fidelity lock — Trial vs Repeat.
+"""Demo golden lock — Trial vs Repeat.
 
-The strongest lock available: the client-mode ``compute_trial_repeat`` must
-reproduce the tested engine's ``repeat_summary`` on the real seeded demo panel —
-same maturity cutoff, same repeaters, same rate. This pins BOTH the demo repeat
-number and the client-mode fidelity, so neither can drift without the other.
+Locks the demo repeat headline the deployed app shows, computed straight from the
+tested engine (``app.trial_repeat.repeat_summary``) on the seeded demo panel:
+trier/mature/immature counts, repeaters, rate, and the maturity cutoff.
 
-Plus a hand-computed fixture that exercises the right-censoring boundary (a repeat
-one day outside the window does NOT count).
+**Credential-free by design.** A golden pins DEMO output, so it must not import
+the client-mode scaffolding (``lailara_engagement``). That keeps this gate green
+regardless of the CI PAT — a token expiry can degrade client-mode coverage but can
+never turn the demo invariant red. The client-mode fidelity lock (that
+``compute_trial_repeat`` reproduces these exact engine numbers) and the direct
+right-censoring boundary fixture live in ``tests/test_client_mode.py``.
 """
 from __future__ import annotations
 
-import pandas as pd
-import pytest
 
-pytest.importorskip("lailara_engagement")
-
-from client_mode import compute_trial_repeat  # noqa: E402  (repo root on path via cwd)
-
-
-def test_client_compute_matches_engine_on_demo_panel():
-    from app.trial_repeat import AS_OF, repeat_summary  # app engine (package import)
-    import cinderhaven_household_panel as panel
+def test_demo_repeat_summary_locked():
+    from app.trial_repeat import repeat_summary  # app engine — no lailara_engagement
 
     eng = repeat_summary(window_weeks=12)
-    tx = panel.get_transactions().rename(columns={"date": "purchase_date"})
-    mine = compute_trial_repeat(tx, 12, AS_OF)
-    assert mine["n_mature"] == eng["n_mature"] == 4456
-    assert mine["n_repeaters"] == eng["n_repeaters"] == 2188
-    assert round(mine["repeat_rate"], 4) == round(eng["repeat_rate"], 4) == 0.491
-
-
-def test_maturity_boundary_fixture():
-    # as_of 2026-01-31, window 12w (84 days) -> maturity cutoff 2025-11-08.
-    as_of = pd.Timestamp("2026-01-31")
-    tx = pd.DataFrame([
-        ("H1", "2025-06-01"), ("H1", "2025-07-01"),   # repeat in window -> repeater
-        ("H2", "2025-06-15"),                          # no repeat -> non-repeater
-        ("H3", "2025-08-01"), ("H3", "2025-09-01"),   # repeat in window -> repeater
-        ("H4", "2026-01-15"),                          # immature (first purchase after cutoff)
-        ("H5", "2025-07-01"), ("H5", "2025-12-01"),   # repeat OUTSIDE the 84-day window -> non-repeater
-    ], columns=["household_id", "purchase_date"])
-    tx["purchase_date"] = pd.to_datetime(tx["purchase_date"])
-    r = compute_trial_repeat(tx, 12, as_of)
-    assert r["n_triers"] == 5
-    assert r["n_mature"] == 4          # H1,H2,H3,H5 mature; H4 immature
-    assert r["n_immature"] == 1
-    assert r["n_repeaters"] == 2       # H1,H3 (H5's repeat is out of window)
-    assert r["repeat_rate"] == 0.5
-    assert r["maturity_cutoff_date"] == "2025-11-08"
+    assert eng["n_triers"] == 4487
+    assert eng["n_mature"] == 4456
+    assert eng["n_immature"] == 31
+    assert eng["n_repeaters"] == 2188
+    assert round(eng["repeat_rate"], 4) == 0.491
+    assert str(eng["maturity_cutoff_date"])[:10] == "2025-10-06"
